@@ -16,7 +16,7 @@
 ### In scope
 - Namespace selector with cluster-wide view
 - Deployments, ReplicaSets, and Pods — list and detail views
-- Live pod log streaming (WebSocket)
+- Pod log tail — last N lines, static fetch (no streaming)
 - Kubernetes Events feed
 - Pod CPU and memory metrics via Metrics Server (graceful degradation if absent)
 - Kubernetes manifests: Deployment, Service, ServiceAccount, ClusterRole, ClusterRoleBinding
@@ -31,6 +31,7 @@
 | Multi-cluster support | Complexity multiplier; nail single-cluster first | v3 |
 | Prometheus / custom metrics | No external dependencies in v1 | v2 |
 | Dark mode / theming | UI polish | v2 |
+| Live log streaming | Solved better by dedicated tooling (Grafana/Loki, Datadog); static tail covers immediate need | v2 if justified |
 
 ---
 
@@ -45,12 +46,15 @@
 - Go module: `api/` with `cmd/server/main.go`, `/healthz` endpoint
 - React scaffold: `web/` with Vite + TypeScript + TanStack Router + React Query
 - `make dev` runs both API and frontend with hot reload
+- `make deploy-local` builds image, loads into Minikube (`minikube image load`), and applies manifests — primary dev workflow
 - `deploy/manifests/` skeleton: `namespace.yaml`, `serviceaccount.yaml`
+
+**Dev workflow note:** Primary development targets running the portal as a Pod inside Minikube — this exercises the real deployment path and RBAC from day one. Out-of-cluster operation (plain `go run`, reading `~/.kube/config`) is supported automatically by `client-go`'s auth auto-detect and is useful as a fallback. `make dev` uses out-of-cluster for fast iteration; `make deploy-local` uses in-cluster for deployment testing.
 
 **Design decision to consider:** _How do we serve the frontend in production?_ Options: (a) embed React build into Go binary with `embed.FS`, (b) separate nginx container. We'll go with (a) — single binary is simpler to deploy on any cluster, no sidecar to manage.
 
 #### Day 3–4: Kubernetes client + Workloads API
-- `internal/k8s/client.go` — in-cluster vs kubeconfig detection, single shared client
+- `internal/k8s/client.go` — `client-go` auto-detect: tries in-cluster service account token first, falls back to `~/.kube/config` for out-of-cluster operation (local dev). Same binary, zero code changes between environments.
 - Handlers: `GET /api/v1/namespaces`, `GET /api/v1/namespaces/:ns/deployments`, `GET /api/v1/namespaces/:ns/pods`
 - Typed response structs — no raw k8s objects leaked to the frontend
 - RBAC: `ClusterRole` with `get/list/watch` on `namespaces`, `deployments`, `replicasets`, `pods`
@@ -71,13 +75,14 @@
 
 **Goal:** A portal that gives you real signal — logs and events — the two things you reach for first in any incident.
 
-#### Day 1–2: Live log streaming
-- `internal/ws/logs.go` — WebSocket handler wrapping `client-go` pod log follow
-- Reconnection logic: client-side exponential backoff, server-side stream cleanup on disconnect
-- Timestamp toggle, line buffer cap (prevent memory growth on noisy pods)
-- Frontend: `LogViewer` component with auto-scroll, pause-on-hover, line count
+#### Day 1–2: Log tail
+- `GET /api/v1/namespaces/:ns/pods/:pod/logs?tail=200` — returns last N lines as plain text via `client-go`
+- Tail line count configurable via query param, capped at a sensible max (e.g. 1000)
+- Handles pod-not-found and container-not-ready cleanly — typed errors, not panics
+- Frontend: `LogViewer` component — monospace, scrollable, "Copy to clipboard" button, tail count selector
+- Link to external log platform (e.g. Grafana) configurable via env var — shown as a callout in the UI
 
-**Design decision to consider:** _WebSocket vs. Server-Sent Events (SSE) for log streaming._ SSE is simpler (HTTP, no upgrade, works through more proxies) but is unidirectional. WebSocket lets us send control signals (filter, pause) from client. We'll use WebSocket — the control channel will matter later.
+**Decision made:** _Static tail vs. live streaming._ In any mature setup, logs belong in a dedicated system (Grafana/Loki, Datadog, Elastic). Building a full streaming implementation here solves a problem that's already solved better elsewhere. Static tail is genuinely useful for quick checks ("is this pod doing anything?") without the complexity of WebSocket lifecycle, reconnection logic, or distinguishing network blips from pod termination. Live streaming deferred to v2 if there's a clear use case that external tooling doesn't cover.
 
 #### Day 3: Events feed
 - `GET /api/v1/namespaces/:ns/events` — filtered by involved object where applicable
@@ -90,7 +95,7 @@
 - Graceful degradation: if Metrics Server absent, API returns `metrics_available: false` and UI shows a callout instead of an error
 - CPU (millicores) and memory (MiB) with request/limit context where available
 
-**Checkpoint:** Can stream logs from any pod, see events, see metrics (or a clear "Metrics Server not available" state).
+**Checkpoint:** Can view pod log tail, see events, see metrics (or a clear "Metrics Server not available" state).
 
 ---
 
@@ -155,12 +160,11 @@ kube-portal/
 │   │   ├── handlers/
 │   │   │   ├── namespaces.go
 │   │   │   ├── workloads.go
+│   │   │   ├── logs.go
 │   │   │   ├── events.go
 │   │   │   └── metrics.go
-│   │   ├── k8s/
-│   │   │   └── client.go
-│   │   └── ws/
-│   │       └── logs.go
+│   │   └── k8s/
+│   │       └── client.go
 │   ├── go.mod
 │   └── go.sum
 ├── web/
@@ -195,9 +199,11 @@ kube-portal/
 
 ## Definition of done (v1)
 
-- [ ] `make dev` starts a working local dev environment
+- [ ] `make dev` starts a working out-of-cluster dev environment against Minikube
+- [ ] `make deploy-local` builds, loads into Minikube, and deploys in-cluster successfully
 - [ ] Can list and inspect deployments and pods across namespaces
-- [ ] Can stream live logs from any running pod
+- [ ] Can view last N lines of logs from any pod; graceful message if pod has no logs
+- [ ] Link to external log platform shown in log view (if configured)
 - [ ] Can view Kubernetes events, namespace-scoped
 - [ ] Pod metrics shown where Metrics Server is available; graceful fallback where it isn't
 - [ ] `kubectl apply -f deploy/manifests/` deploys the portal to a cluster with no manual steps
@@ -209,7 +215,7 @@ kube-portal/
 
 ## Guiding principles for the build
 
-1. **One concern per package.** The k8s client lives in `internal/k8s`, handlers in `internal/handlers`, WebSocket logic in `internal/ws`. Don't mix them.
+1. **One concern per package.** The k8s client lives in `internal/k8s`, handlers in `internal/handlers`. Don't mix them.
 2. **Errors are first-class.** Every handler returns a typed error. Every UI state accounts for loading, error, and empty — not just the happy path.
 3. **No raw k8s types on the wire.** Map to our own response types. This is the most important seam in the whole system.
 4. **URLs are state.** Selected namespace, pod name, log cursor — all in the URL. Deep-linkable from day one.
