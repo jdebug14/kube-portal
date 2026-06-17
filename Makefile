@@ -5,24 +5,26 @@ IMAGE_NAME=kube-portal:dev
 # ── Dev environment ───────────────────────────────────────────
 
 .PHONY: env-start
-env-start:
-	@echo "→ Opening VS Code"
-	@code .
-	@echo "→ Starting Docker..."
-	@sudo service docker start 2>/dev/null || true
-	@echo "→ Waiting for Docker to be ready..."
-	@until docker info >/dev/null 2>&1; do sleep 1; done
-	@echo "→ Starting Minikube..."
-	@minikube start --driver=docker 2>/dev/null || true
-	@echo "✓ Environment ready"
+# env-start:
+# 	@echo "→ Opening VS Code"
+# 	@code .
+# 	@echo "→ Starting Docker..."
+# 	@sudo service docker start 2>/dev/null || true
+# 	@echo "→ Waiting for Docker to be ready..."
+# 	@until docker info >/dev/null 2>&1; do sleep 1; done
+# 	@echo "→ Starting Minikube..."
+# 	@minikube start --driver=docker 2>/dev/null || true
+# 	@echo "✓ Environment ready"
 
-.PHONY: env-stop
-env-stop:
-	@echo "→ Stopping Minikube..."
-	@minikube stop
-	@echo "→ Stopping Docker..."
-	@sudo service docker stop
-	@echo "✓ Environment stopped"
+# .PHONY: env-stop
+# env-stop:
+# 	@echo "→ Stopping Minikube..."
+# 	@minikube stop
+# 	@echo "→ Stopping Docker..."
+# 	@powershell.exe -Command "Stop-Process -Name 'Docker Desktop' -Force"
+# 	@powershell.exe -Command "Stop-Process -Name 'com.docker.backend' -Force"
+# 	@echo "✓ Environment stopped"
+# 	@echo "→ Closing VS Code..."
 
 .PHONY: dev
 dev: env-start

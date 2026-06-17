@@ -41,19 +41,11 @@
 
 **Goal:** A working dev loop and the first real data on screen.
 
-#### Day 1–2: Repo scaffold
+#### Day 1: Repo scaffold
 - `git init kube-portal` with `.gitignore`, `README.md`, `Makefile`
 - Go module: `api/` with `cmd/server/main.go`, `/healthz` endpoint
-- React scaffold: `web/` with Vite + TypeScript + TanStack Router + React Query
-- `make dev` runs both API and frontend with hot reload
-- `make deploy-local` builds image, loads into Minikube (`minikube image load`), and applies manifests — primary dev workflow
-- `deploy/manifests/` skeleton: `namespace.yaml`, `serviceaccount.yaml`
 
-**Dev workflow note:** Primary development targets running the portal as a Pod inside Minikube — this exercises the real deployment path and RBAC from day one. Out-of-cluster operation (plain `go run`, reading `~/.kube/config`) is supported automatically by `client-go`'s auth auto-detect and is useful as a fallback. `make dev` uses out-of-cluster for fast iteration; `make deploy-local` uses in-cluster for deployment testing.
-
-**Design decision to consider:** _How do we serve the frontend in production?_ Options: (a) embed React build into Go binary with `embed.FS`, (b) separate nginx container. We'll go with (a) — single binary is simpler to deploy on any cluster, no sidecar to manage.
-
-#### Day 3–4: Kubernetes client + Workloads API
+#### Day 2–3: Kubernetes client + Workloads API
 - `internal/k8s/client.go` — `client-go` auto-detect: tries in-cluster service account token first, falls back to `~/.kube/config` for out-of-cluster operation (local dev). Same binary, zero code changes between environments.
 - Handlers: `GET /api/v1/namespaces`, `GET /api/v1/namespaces/:ns/deployments`, `GET /api/v1/namespaces/:ns/pods`
 - Typed response structs — no raw k8s objects leaked to the frontend
@@ -61,7 +53,9 @@
 
 **Design decision to consider:** _Typed response structs vs. forwarding raw k8s JSON._ Forwarding is faster to write but tightly couples the frontend to the k8s API shape. Typed structs give us a stable contract and let us evolve independently. We'll use typed structs with explicit field mapping.
 
-#### Day 5: Workloads UI
+#### Day 4: Workloads UI
+**Design decision to consider:** _How do we serve the frontend in production?_ Options: (a) embed React build into Go binary with `embed.FS`, (b) separate nginx container. We'll go with (a) — single binary is simpler to deploy on any cluster, no sidecar to manage.
+
 - Namespace selector (global, persisted in URL param)
 - Deployments list: name, namespace, ready/desired, age, image
 - Pods list: name, status, restarts, node, age
@@ -99,7 +93,7 @@
 
 ---
 
-### Week 3 — Hardening + Deployable Artefact
+### Week 3 — Hardening + Deployable Artifact
 
 **Goal:** Something you'd actually hand to a team to run. Not pretty, but trustworthy.
 
@@ -122,6 +116,12 @@
 - Image size target: under 50MB
 - Complete `deploy/manifests/` — everything needed to `kubectl apply -f deploy/manifests/`
 - Configurable via environment variables: `KUBEPORTAL_PORT`, `KUBEPORTAL_LOG_LEVEL`
+- - React scaffold: `web/` with Vite + TypeScript + TanStack Router + React Query
+- `make dev` runs both API and frontend with hot reload
+- `make deploy-local` builds image, loads into Minikube (`minikube image load`), and applies manifests — primary dev workflow
+- `deploy/manifests/` skeleton: `namespace.yaml`, `serviceaccount.yaml`
+
+**Dev workflow note:** Primary development targets running the portal as a Pod inside Minikube — this exercises the real deployment path and RBAC from day one. Out-of-cluster operation (plain `go run`, reading `~/.kube/config`) is supported automatically by `client-go`'s auth auto-detect and is useful as a fallback. `make dev` uses out-of-cluster for fast iteration; `make deploy-local` uses in-cluster for deployment testing.
 
 #### Day 5: README + wrap-up
 - Getting started (local dev, in-cluster deploy)
