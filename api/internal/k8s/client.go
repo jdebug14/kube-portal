@@ -50,3 +50,43 @@ func (c *Client) ListNamespaces(ctx context.Context) ([]types.Namespace, error) 
 	}
 	return results, nil
 }
+
+func (c *Client) ListDeployments(ctx context.Context, namespace string) ([]types.Deployment, error) {
+	deploymentList, err := c.clientset.AppsV1().Deployments(namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch deployments: %w", err)
+	}
+	results := make([]types.Deployment, 0, len(deploymentList.Items))
+	for _, d := range deploymentList.Items {
+		var desiredReplicas int32
+		if d.Spec.Replicas != nil {
+			desiredReplicas = *d.Spec.Replicas
+		}
+		results = append(results, types.Deployment{
+			Name:            d.Name,
+			Namespace:       d.Namespace,
+			DesiredReplicas: desiredReplicas,
+			ReadyReplicas:   d.Status.ReadyReplicas,
+			CreatedAt:       d.CreationTimestamp.Time,
+		})
+	}
+	return results, nil
+}
+
+func (c *Client) ListPods(ctx context.Context, namespace string) ([]types.Pod, error) {
+	podList, err := c.clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch pods: %w", err)
+	}
+	results := make([]types.Pod, 0, len(podList.Items))
+	for _, p := range podList.Items {
+		results = append(results, types.Pod{
+			Name:      p.Name,
+			Namespace: p.Namespace,
+			Phase:     string(p.Status.Phase),
+			HostNode:  p.Spec.NodeName,
+			CreatedAt: p.CreationTimestamp.Time,
+		})
+	}
+	return results, nil
+}

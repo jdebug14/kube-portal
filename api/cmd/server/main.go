@@ -33,6 +33,8 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	})
 	router.Get("/api/v1/namespaces", handler.ListNamespaces)
+	router.Get("/api/v1/namespaces/{ns}/deployments", handler.ListDeployments)
+	router.Get("/api/v1/namespaces/{ns}/pods", handler.ListPods)
 
 	logger.Info("server starting", "port", port)
 	if err := http.ListenAndServe(":"+port, router); err != nil {
