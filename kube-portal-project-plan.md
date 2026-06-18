@@ -49,7 +49,6 @@
 - `internal/k8s/client.go` — `client-go` auto-detect: tries in-cluster service account token first, falls back to `~/.kube/config` for out-of-cluster operation (local dev). Same binary, zero code changes between environments.
 - Handlers: `GET /api/v1/namespaces`, `GET /api/v1/namespaces/:ns/deployments`, `GET /api/v1/namespaces/:ns/pods`
 - Typed response structs — no raw k8s objects leaked to the frontend
-- RBAC: `ClusterRole` with `get/list/watch` on `namespaces`, `deployments`, `replicasets`, `pods`
 
 **Design decision to consider:** _Typed response structs vs. forwarding raw k8s JSON._ Forwarding is faster to write but tightly couples the frontend to the k8s API shape. Typed structs give us a stable contract and let us evolve independently. We'll use typed structs with explicit field mapping.
 
@@ -104,6 +103,7 @@
 - Handle common failure modes: namespace not found, pod already terminated, metrics unavailable
 
 #### Day 3: RBAC + security posture
+- RBAC: `ClusterRole` with `get/list/watch` on `namespaces`, `deployments`, `replicasets`, `pods`
 - Least-privilege `ClusterRole` — only the verbs we actually use
 - Non-root container, read-only root filesystem in the Deployment manifest
 - Resource requests and limits on the portal Pod
@@ -158,13 +158,17 @@ kube-portal/
 │   │   └── main.go
 │   ├── internal/
 │   │   ├── handlers/
+│   │   │   ├── handlers.go
 │   │   │   ├── namespaces.go
-│   │   │   ├── workloads.go
+│   │   │   ├── deployments.go
+│   │   │   ├── pods.go
 │   │   │   ├── logs.go
 │   │   │   ├── events.go
 │   │   │   └── metrics.go
-│   │   └── k8s/
-│   │       └── client.go
+│   │   ├── k8s/
+│   │   |   └── client.go
+│   │   └── types/
+│   │       └── k8s.go
 │   ├── go.mod
 │   └── go.sum
 ├── web/
