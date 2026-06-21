@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 
 interface Namespace {
     name: string
@@ -20,11 +21,12 @@ function NamespaceList() {
     
     if (isLoading) return <div>Loading...</div>
     if (isError) return <div>Error: {error.message}</div>
-
     return (
         <ul>
             {data?.map(ns => (
-                <li key={ns.name}>{ns.name}</li>
+                <li key={ns.name}>
+                    <Link to="/namespaces/$ns" params={{ns: ns.name}} >{ns.name}</Link>
+                </li>
             ))}
         </ul>
     )

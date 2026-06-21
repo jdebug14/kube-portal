@@ -1,10 +1,10 @@
-import NamespaceList from "./components/NamespaceList"
+import { Outlet } from "@tanstack/react-router"
 
 function App() {
   return (
     <div>
       <h1>KubePortal</h1>
-      <NamespaceList />
+      <Outlet />
     </div>
   )
 }
