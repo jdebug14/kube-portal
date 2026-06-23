@@ -1,6 +1,5 @@
-import { getRouteApi } from '@tanstack/react-router'
+import { getRouteApi, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
 
 const routeApi = getRouteApi('/namespaces/$ns')
 

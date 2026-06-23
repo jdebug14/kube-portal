@@ -1,6 +1,6 @@
-import { getRouteApi } from '@tanstack/react-router'
+import { getRouteApi, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import KeyValueList from '../components/KeyValueList'
 
 const routeApi = getRouteApi('/namespaces/$ns/pods/$pn')
 
@@ -50,30 +50,8 @@ function PodDetailsPage() {
         <div key={data?.name}>
             <div>Status: {data?.phase}</div>
             <div>Created at: {data?.created_at}</div>
-            <div>
-              Annotations:
-              <ul>
-                {annotationEntries.length > 0 ? (
-                  annotationEntries.map(([key, value]) => (
-                    <li key={key}>{key}: {value}</li>
-                  ))
-                ) : (
-                  <li>No annotations</li>
-                )}
-              </ul>
-            </div>
-            <div>
-              Labels:
-              <ul>
-                {labelEntries.length > 0 ? (
-                  labelEntries.map(([key, value]) => (
-                    <li key={key}>{key}: {value}</li>
-                  ))
-                ) : (
-                  <li>No labels</li>
-                )}
-              </ul>
-            </div>
+            <KeyValueList title="Annotations" entries={annotationEntries}/>
+            <KeyValueList title="Labels" entries={labelEntries}/>
             <div>
               Containers:
               <ul>

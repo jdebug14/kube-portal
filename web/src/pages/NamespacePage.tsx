@@ -13,7 +13,7 @@ const fetchNamespaces = async (): Promise<Namespace[]> => {
     return res.json()
 }
 
-function NamespaceList() {
+function NamespacePage() {
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['namespaces'],
         queryFn: fetchNamespaces,
@@ -32,4 +32,4 @@ function NamespaceList() {
     )
 }
 
-export default NamespaceList
+export default NamespacePage
