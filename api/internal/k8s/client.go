@@ -3,8 +3,10 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jdebug14/kube-portal/internal/types"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -89,4 +91,52 @@ func (c *Client) ListPods(ctx context.Context, namespace string) ([]types.Pod, e
 		})
 	}
 	return results, nil
+}
+
+func (c *Client) GetPodDetail(ctx context.Context, namespace string, podName string) (types.PodDetail, error) {
+	podDetails, err := c.clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
+	if err != nil {
+		return types.PodDetail{}, fmt.Errorf("failed to get pod: %w", err)
+	}
+	result := types.PodDetail{
+		Name:        podDetails.Name,
+		Namespace:   podDetails.Namespace,
+		Phase:       string(podDetails.Status.Phase),
+		HostNode:    podDetails.Spec.NodeName,
+		CreatedAt:   podDetails.CreationTimestamp.Time,
+		Annotations: podDetails.Annotations,
+		Labels:      podDetails.Labels,
+		Containers:  mapContainers(podDetails.Spec.Containers, podDetails.Status.ContainerStatuses),
+	}
+	return result, nil
+}
+
+func mapContainers(containers []v1.Container, statuses []v1.ContainerStatus) []types.Container {
+	statusMap := make(map[string]v1.ContainerStatus)
+	for _, s := range statuses {
+		statusMap[s.Name] = s
+	}
+	results := make([]types.Container, 0, len(containers))
+	for _, c := range containers {
+		status := statusMap[c.Name]
+		var lastExitCode int32
+		var lastExitReason string
+		var lastFinishedAt *time.Time
+
+		if status.LastTerminationState.Terminated != nil {
+			lastExitCode = status.LastTerminationState.Terminated.ExitCode
+			lastExitReason = status.LastTerminationState.Terminated.Reason
+			lastFinishedAt = &status.LastTerminationState.Terminated.FinishedAt.Time
+		}
+		results = append(results, types.Container{
+			Name:           c.Name,
+			Image:          c.Image,
+			Ready:          status.Ready,
+			Restarts:       status.RestartCount,
+			LastExitCode:   lastExitCode,
+			LastExitReason: lastExitReason,
+			LastFinishedAt: lastFinishedAt,
+		})
+	}
+	return results
 }

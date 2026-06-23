@@ -18,3 +18,15 @@ func (h *Handler) ListPods(w http.ResponseWriter, r *http.Request) {
 		h.logger.Error("failed to encode response", "error", err)
 	}
 }
+
+func (h *Handler) GetPodDetail(w http.ResponseWriter, r *http.Request) {
+	podDetails, err := h.client.GetPodDetail(r.Context(), chi.URLParam(r, "ns"), chi.URLParam(r, "pn"))
+	if err != nil {
+		http.Error(w, "failed to get pod", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(podDetails); err != nil {
+		h.logger.Error("failed to encode response", "error", err)
+	}
+}

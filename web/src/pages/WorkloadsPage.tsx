@@ -7,8 +7,8 @@ const routeApi = getRouteApi('/namespaces/$ns')
 interface Pod {
     name: string
     namespace: string
-    phase: number
-    host_node: number
+    phase: string
+    host_node: string
     created_at: string
 }
 
@@ -25,15 +25,17 @@ function WorkloadsPage() {
         queryFn: () => fetchPods(ns),
     })
 
-  if (isLoading) return <div>Loading...</div>
-  if (isError) return <div>Error: {error.message}</div>
   return (
     <div>
       <Link to="/">← Namespaces</Link>
+      {isLoading && <div>Loading...</div>}
+      {isError && <div>Error: {error.message}</div>}
       <h2>{ns}</h2>
       <ul>
         {data?.map(pod => (
-          <li key={pod.name}>{pod.name} [{pod.phase}]</li>
+          <li key={pod.name}>
+            <Link to="/namespaces/$ns/pods/$pn" params={{ns: ns, pn: pod.name}}>{pod.name}</Link> [{pod.phase}]
+          </li>
         ))}
       </ul>
     </div>

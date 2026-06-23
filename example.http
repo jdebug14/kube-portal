@@ -9,3 +9,6 @@ GET http://localhost:8080/api/v1/namespaces/kube-system/deployments
 
 ### List Pods
 GET http://localhost:8080/api/v1/namespaces/kube-system/pods
+
+### Get Pod Details
+GET http://localhost:8080/api/v1/namespaces/kube-system/pods/kube-scheduler-minikube
