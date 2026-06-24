@@ -8,7 +8,10 @@ import (
 )
 
 func (h *Handler) ListPods(w http.ResponseWriter, r *http.Request) {
-	pods, err := h.client.ListPods(r.Context(), chi.URLParam(r, "ns"))
+	pods, err := h.client.ListPods(
+		r.Context(),
+		chi.URLParam(r, "ns"),
+	)
 	if err != nil {
 		http.Error(w, "failed to list pods", http.StatusInternalServerError)
 		return
@@ -20,7 +23,11 @@ func (h *Handler) ListPods(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetPodDetail(w http.ResponseWriter, r *http.Request) {
-	podDetails, err := h.client.GetPodDetail(r.Context(), chi.URLParam(r, "ns"), chi.URLParam(r, "pn"))
+	podDetails, err := h.client.GetPodDetail(
+		r.Context(),
+		chi.URLParam(r, "ns"),
+		chi.URLParam(r, "pn"),
+	)
 	if err != nil {
 		http.Error(w, "failed to get pod", http.StatusInternalServerError)
 		return

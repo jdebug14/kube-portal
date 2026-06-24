@@ -101,6 +101,8 @@
 - Frontend error boundaries on every data-fetching page
 - Loading skeletons (not spinners) — better perceived performance
 - Handle common failure modes: namespace not found, pod already terminated, metrics unavailable
+- Consider rate limiting?
+- Documentation: definintely Go doc comments, maybe API spec
 
 #### Day 3: RBAC + security posture
 - RBAC: `ClusterRole` with `get/list/watch` on `namespaces`, `deployments`, `replicasets`, `pods`

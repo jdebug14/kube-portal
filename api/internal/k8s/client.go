@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/jdebug14/kube-portal/internal/types"
@@ -96,7 +97,7 @@ func (c *Client) ListPods(ctx context.Context, namespace string) ([]types.Pod, e
 func (c *Client) GetPodDetail(ctx context.Context, namespace string, podName string) (types.PodDetail, error) {
 	podDetails, err := c.clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 	if err != nil {
-		return types.PodDetail{}, fmt.Errorf("failed to get pod: %w", err)
+		return types.PodDetail{}, fmt.Errorf("failed to get pod details: %w", err)
 	}
 	result := types.PodDetail{
 		Name:        podDetails.Name,
@@ -109,6 +110,41 @@ func (c *Client) GetPodDetail(ctx context.Context, namespace string, podName str
 		Containers:  mapContainers(podDetails.Spec.Containers, podDetails.Status.ContainerStatuses),
 	}
 	return result, nil
+}
+
+func (c *Client) ListNamespaceEvents(ctx context.Context, namespace string, involvedObjectName string) ([]types.Event, error) {
+	var listOpts metav1.ListOptions
+	if involvedObjectName != "" {
+		listOpts = metav1.ListOptions{
+			FieldSelector: "involvedObject.name=" + involvedObjectName,
+		}
+	} else {
+		listOpts = metav1.ListOptions{}
+	}
+	events, err := c.clientset.CoreV1().Events(namespace).List(ctx, listOpts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch namespace events: %w", err)
+	}
+	results := make([]types.Event, 0, len(events.Items))
+	for _, e := range events.Items {
+		results = append(results, types.Event{
+			Type:      e.Type,
+			Reason:    e.Reason,
+			Message:   e.Message,
+			Count:     e.Count,
+			FirstTime: e.FirstTimestamp.Time,
+			LastTime:  e.LastTimestamp.Time,
+			InvolvedObject: types.EventInvolvedObject{
+				Kind:      e.InvolvedObject.Kind,
+				Name:      e.InvolvedObject.Name,
+				Namespace: e.InvolvedObject.Namespace,
+			},
+		})
+	}
+	sort.Slice(results, func(a, b int) bool {
+		return results[a].LastTime.After(results[b].LastTime)
+	})
+	return results, nil
 }
 
 func mapContainers(containers []v1.Container, statuses []v1.ContainerStatus) []types.Container {

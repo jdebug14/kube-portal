@@ -46,3 +46,19 @@ type PodDetail struct {
 	Labels      map[string]string `json:"labels"`
 	Containers  []Container       `json:"containers"`
 }
+
+type EventInvolvedObject struct {
+	Kind      string `json:"kind"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+}
+
+type Event struct {
+	Type           string              `json:"type"`
+	Reason         string              `json:"reason"`
+	Message        string              `json:"message"`
+	Count          int32               `json:"count"`
+	FirstTime      time.Time           `json:"first_time"`
+	LastTime       time.Time           `json:"last_time"`
+	InvolvedObject EventInvolvedObject `json:"involved_object"`
+}

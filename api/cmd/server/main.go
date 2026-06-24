@@ -36,6 +36,7 @@ func main() {
 	router.Get("/api/v1/namespaces/{ns}/deployments", handler.ListDeployments)
 	router.Get("/api/v1/namespaces/{ns}/pods", handler.ListPods)
 	router.Get("/api/v1/namespaces/{ns}/pods/{pn}", handler.GetPodDetail)
+	router.Get("/api/v1/namespaces/{ns}/events", handler.ListNamespaceEvents)
 
 	logger.Info("server starting", "port", port)
 	if err := http.ListenAndServe(":"+port, router); err != nil {

@@ -8,7 +8,10 @@ import (
 )
 
 func (h *Handler) ListDeployments(w http.ResponseWriter, r *http.Request) {
-	deployments, err := h.client.ListDeployments(r.Context(), chi.URLParam(r, "ns"))
+	deployments, err := h.client.ListDeployments(
+		r.Context(),
+		chi.URLParam(r, "ns"),
+	)
 	if err != nil {
 		http.Error(w, "failed to list deployments", http.StatusInternalServerError)
 		return
