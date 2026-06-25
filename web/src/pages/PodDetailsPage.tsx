@@ -1,6 +1,7 @@
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import KeyValueList from '../components/KeyValueList'
+import EventsFeed from '../components/EventsFeed'
 
 const routeApi = getRouteApi('/namespaces/$ns/pods/$pn')
 
@@ -43,21 +44,21 @@ function PodDetailsPage() {
 
   return (
     <div>
-      <Link to="/namespaces/$ns" params={{ ns }}>← {ns}/Pods</Link>
+      <Link to='/namespaces/$ns' params={{ ns }}>← {ns}/Pods</Link>
       {isLoading && <div>Loading...</div>}
       {isError && <div>Error: {error.message}</div>}
       <h2>{pn}</h2>
-        <div key={data?.name}>
+        <div>
             <div>Status: {data?.phase}</div>
             <div>Created at: {data?.created_at}</div>
-            <KeyValueList title="Annotations" entries={annotationEntries}/>
-            <KeyValueList title="Labels" entries={labelEntries}/>
+            <KeyValueList title='Annotations' entries={annotationEntries}/>
+            <KeyValueList title='Labels' entries={labelEntries}/>
             <div>
               Containers:
               <ul>
                 {data?.containers.map(container => (
                   <li key={container.name}>
-                    <div><strong>{container.name}</strong></div>
+                    <div>Name:{container.name}</div>
                     <div>Image: {container.image}</div>
                     <div>Ready: {String(container.ready)}</div>
                     <div>Restarts: {container.restarts}</div>
@@ -68,6 +69,7 @@ function PodDetailsPage() {
                 ))}
               </ul>
             </div>
+            <EventsFeed namespace={ns} involvedObjectName={pn} />
           </div>
     </div>
   )

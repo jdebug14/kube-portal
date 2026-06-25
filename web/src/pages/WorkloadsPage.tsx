@@ -1,5 +1,6 @@
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import EventsFeed from '../components/EventsFeed'
 
 const routeApi = getRouteApi('/namespaces/$ns')
 
@@ -37,6 +38,7 @@ function WorkloadsPage() {
           </li>
         ))}
       </ul>
+      <EventsFeed namespace={ns} />
     </div>
   )
 }
