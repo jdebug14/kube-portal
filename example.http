@@ -16,5 +16,17 @@ GET http://localhost:8080/api/v1/namespaces/kube-system/pods/kube-scheduler-mini
 ### List Namespace Events 
 GET http://localhost:8080/api/v1/namespaces/kube-system/events
 
-### Filter Namespace Events 
+### List Namespace Events With Filter
 GET http://localhost:8080/api/v1/namespaces/kube-system/events?involvedObjectName=etcd-minikube
+
+### Get Pod Logs
+GET http://localhost:8080/api/v1/namespaces/kube-system/pods/kube-scheduler-minikube/logs
+
+### Get Pod Logs With Container
+GET http://localhost:8080/api/v1/namespaces/kube-system/pods/kube-scheduler-minikube/logs?container=kube-scheduler
+
+### Get Pod Logs With Tail Lines
+GET http://localhost:8080/api/v1/namespaces/kube-system/pods/kube-scheduler-minikube/logs?tailLines=3
+
+### Get Pod Logs With Container & Tail Lines
+GET http://localhost:8080/api/v1/namespaces/kube-system/pods/kube-scheduler-minikube/logs?container=kube-scheduler&tailLines=3

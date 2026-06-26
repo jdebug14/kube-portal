@@ -3,7 +3,9 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"io"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/jdebug14/kube-portal/internal/types"
@@ -145,6 +147,24 @@ func (c *Client) ListNamespaceEvents(ctx context.Context, namespace string, invo
 		return results[a].LastTime.After(results[b].LastTime)
 	})
 	return results, nil
+}
+
+func (c *Client) GetPodLogs(ctx context.Context, namespace string, podName string, container string, tailLines int64) (string, error) {
+	req := c.clientset.CoreV1().Pods(namespace).GetLogs(podName, &v1.PodLogOptions{
+		Container: container,
+		TailLines: &tailLines,
+	})
+	stream, err := req.Stream(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to retrieve logs: %w", err)
+	}
+	defer stream.Close()
+	buf := new(strings.Builder)
+	_, err = io.Copy(buf, stream)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse logs stream: %w", err)
+	}
+	return buf.String(), nil
 }
 
 func mapContainers(containers []v1.Container, statuses []v1.ContainerStatus) []types.Container {

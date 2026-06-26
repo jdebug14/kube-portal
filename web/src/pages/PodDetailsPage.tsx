@@ -2,6 +2,7 @@ import { getRouteApi, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import KeyValueList from '../components/KeyValueList'
 import EventsFeed from '../components/EventsFeed'
+import PodLogsViewer from '../components/PodLogsViewer'
 
 const routeApi = getRouteApi('/namespaces/$ns/pods/$pn')
 
@@ -70,6 +71,9 @@ function PodDetailsPage() {
               </ul>
             </div>
             <EventsFeed namespace={ns} involvedObjectName={pn} />
+            {data && (
+              <PodLogsViewer namespace={ns} podName={pn} containers={data.containers.map(c => c.name)} />
+            )}
           </div>
     </div>
   )
