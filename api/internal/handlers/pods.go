@@ -13,7 +13,7 @@ func (h *Handler) ListPods(w http.ResponseWriter, r *http.Request) {
 		chi.URLParam(r, "ns"),
 	)
 	if err != nil {
-		http.Error(w, "failed to list pods", http.StatusInternalServerError)
+		h.writeError(w, http.StatusInternalServerError, "failed to list pods", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -29,7 +29,7 @@ func (h *Handler) GetPodDetail(w http.ResponseWriter, r *http.Request) {
 		chi.URLParam(r, "pn"),
 	)
 	if err != nil {
-		http.Error(w, "failed to get pod", http.StatusInternalServerError)
+		h.writeError(w, http.StatusInternalServerError, "failed to retrieve pod details", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

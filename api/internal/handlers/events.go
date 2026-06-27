@@ -14,7 +14,7 @@ func (h *Handler) ListNamespaceEvents(w http.ResponseWriter, r *http.Request) {
 		r.URL.Query().Get("involvedObjectName"),
 	)
 	if err != nil {
-		http.Error(w, "failed to fetch namespace events", http.StatusInternalServerError)
+		h.writeError(w, http.StatusInternalServerError, "failed to fetch namespace events", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

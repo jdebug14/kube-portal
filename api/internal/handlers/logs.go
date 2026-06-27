@@ -14,7 +14,7 @@ func (h *Handler) GetPodLogs(w http.ResponseWriter, r *http.Request) {
 	if tailLinesReq := r.URL.Query().Get("tailLines"); tailLinesReq != "" {
 		tailLines, err = strconv.ParseInt(tailLinesReq, 10, 64)
 		if err != nil {
-			http.Error(w, "tailLines was not a valid integer", http.StatusBadRequest)
+			h.writeError(w, http.StatusBadRequest, "tailLines was not a valid integer", err)
 			return
 		}
 		if tailLines > 1000 {
@@ -32,7 +32,7 @@ func (h *Handler) GetPodLogs(w http.ResponseWriter, r *http.Request) {
 		tailLines,
 	)
 	if err != nil {
-		http.Error(w, "failed to get logs for pod", http.StatusInternalServerError)
+		h.writeError(w, http.StatusInternalServerError, "failed to retrieve pod logs", err)
 		return
 	}
 	w.Header().Set("Content-Type", "text/plain")

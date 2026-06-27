@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { apiFetch } from '../api/client'
 
 interface Namespace {
     name: string
@@ -7,16 +8,11 @@ interface Namespace {
     created_at: string
 }
 
-const fetchNamespaces = async (): Promise<Namespace[]> => {
-    const res = await fetch('/api/v1/namespaces')
-    if (!res.ok) throw new Error('Network error');
-    return res.json()
-}
-
 function NamespacesPage() {
+    const url = `/api/v1/namespaces`
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['namespaces'],
-        queryFn: fetchNamespaces,
+        queryFn: () => apiFetch<Namespace[]>(url, r => r.json()),
     })
     
     if (isLoading) return <div>Loading...</div>

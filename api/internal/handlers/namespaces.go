@@ -8,7 +8,7 @@ import (
 func (h *Handler) ListNamespaces(w http.ResponseWriter, r *http.Request) {
 	namespaces, err := h.client.ListNamespaces(r.Context())
 	if err != nil {
-		http.Error(w, "failed to list namespaces", http.StatusInternalServerError)
+		h.writeError(w, http.StatusInternalServerError, "failed to list namespaces", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

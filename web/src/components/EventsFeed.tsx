@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from '../api/client'
 
 interface EventInvolvedObject {
   kind: string
@@ -16,18 +17,12 @@ interface Event {
     involved_object: EventInvolvedObject
 }
 
-const fetchEventsFeed = async (ns: string, invObjName?: string): Promise<Event[]> => {
-    const url = `/api/v1/namespaces/${ns}/events`
-    + (invObjName ? `?involvedObjectName=${invObjName}` : '')
-    const res = await fetch(url)
-    if (!res.ok) throw new Error('Network error');
-    return res.json()
-}
-
 function EventsFeed({ namespace, involvedObjectName }: { namespace: string, involvedObjectName?: string }) {
+    const url = `/api/v1/namespaces/${namespace}/events`
+    + (involvedObjectName ? `?involvedObjectName=${involvedObjectName}` : '')
   const { data, isLoading, isError, error } = useQuery({
         queryKey: ['events', namespace, involvedObjectName],
-        queryFn: () => fetchEventsFeed(namespace, involvedObjectName),
+        queryFn: () => apiFetch<Event[]>(url, r => r.json()),
     })
     return (
         <div>

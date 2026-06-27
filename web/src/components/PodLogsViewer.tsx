@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from '../api/client';
 
 interface LogViewerProps {
     namespace: string
@@ -7,21 +8,15 @@ interface LogViewerProps {
     containers?: string[]
 }
 
-const getPodLogs = async (ns: string, pn: string, tailLines: number, container: string ): Promise<string> => {
-    const url = `/api/v1/namespaces/${ns}/pods/${pn}/logs`
-        + `?tailLines=${tailLines}`
-        +  `&container=${container}`
-    const res = await fetch(url)
-    if (!res.ok) throw new Error('Network error');
-    return res.text()
-}
-
 function PodLogsViewer({ namespace, podName, containers }: LogViewerProps) {
     const [tailLines, setTailLines] = useState(100)
     const [container, setContainer] = useState(containers ? containers[0] : '')
+    const url = `/api/v1/namespaces/${namespace}/pods/${podName}/logs`
+        + `?tailLines=${tailLines}`
+        +  `&container=${container}`
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['podLogs', podName, namespace, tailLines, container],
-        queryFn: () => getPodLogs(namespace, podName, tailLines, container),
+        queryFn: () => apiFetch(url, r => r.text()),
     })
 
     return (
