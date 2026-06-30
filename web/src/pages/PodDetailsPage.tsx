@@ -12,9 +12,8 @@ interface Container {
   image: string
   ready: boolean
   restarts: number
-  last_exit_code: number
-  last_exit_reason: string
-  last_finished_at: string
+  last_exit_time?: string
+  last_exit_reason?: string
 }
 
 interface PodDetails {
@@ -47,6 +46,7 @@ function PodDetailsPage() {
       {data && (<div>
         <h2>{pn}</h2>
         <div>Status: {data.phase}</div>
+        <div>Host node: {data.host_node}</div>
         <div>Created at: {data.created_at}</div>
         <KeyValueList title='Annotations' entries={annotationEntries}/>
         <KeyValueList title='Labels' entries={labelEntries}/>
@@ -59,9 +59,8 @@ function PodDetailsPage() {
                 <div>Image: {container.image}</div>
                 <div>Ready: {String(container.ready)}</div>
                 <div>Restarts: {container.restarts}</div>
-                <div>Last Exit Code: {container.last_exit_code}</div>
-                <div>Last Exit Reason: {container.last_exit_reason}</div>
-                <div>Last Finished At: {container.last_finished_at}</div>
+                {container.last_exit_time && <div>Last Termination At: {container.last_exit_time}</div>}
+                {container.last_exit_reason && <div>Last Termination Reason: {container.last_exit_reason}</div>}
               </li>
             ))}
           </ul>

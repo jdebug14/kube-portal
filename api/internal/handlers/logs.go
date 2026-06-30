@@ -9,20 +9,10 @@ import (
 )
 
 func (h *Handler) GetPodLogs(w http.ResponseWriter, r *http.Request) {
-	var tailLines int64
-	var err error
-	if tailLinesReq := r.URL.Query().Get("tailLines"); tailLinesReq != "" {
-		tailLines, err = strconv.ParseInt(tailLinesReq, 10, 64)
-		if err != nil {
-			h.writeError(w, http.StatusBadRequest, "tailLines was not a valid integer", err)
-			return
-		}
-		if tailLines > 1000 {
-			h.logger.Warn("Pod log tail lines are restricted to max of 1000", "tailLinesRequested", tailLines)
-			tailLines = 1000
-		}
-	} else {
-		tailLines = 100
+	tailLines, err := parseTailLines(r.URL.Query().Get("tailLines"))
+	if err != nil {
+		h.writeError(w, http.StatusBadRequest, "tailLines must be a positive integer", err)
+		return
 	}
 	podLogs, err := h.client.GetPodLogs(
 		r.Context(),
@@ -37,4 +27,21 @@ func (h *Handler) GetPodLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain")
 	fmt.Fprint(w, podLogs)
+}
+
+func parseTailLines(raw string) (int64, error) {
+	if raw == "" {
+		return 100, nil
+	}
+	tailLines, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	if tailLines < 100 {
+		return 0, fmt.Errorf("tailLines cannot be negative")
+	}
+	if tailLines > 1000 {
+		tailLines = 1000
+	}
+	return tailLines, nil
 }

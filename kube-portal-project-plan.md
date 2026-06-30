@@ -26,13 +26,19 @@
 | Item | Reason | Future milestone |
 |---|---|---|
 | Helm chart | Packaging, not functionality | v2 |
-| OIDC / SSO auth | Mini-project on its own; use token passthrough for now | v2 |
+| OIDC / SSO auth | Mini-project on its own | v2 |
 | Restart / scale operations | Mutations need more hardening and RBAC care | v2 |
 | Multi-cluster support | Complexity multiplier; nail single-cluster first | v3 |
 | Prometheus / custom metrics | No external dependencies in v1 | v2 |
 | Dark mode / theming | UI polish | v2 |
 | Live log streaming | Solved better by dedicated tooling (Grafana/Loki, Datadog); static tail covers immediate need | v2 if justified |
 
+
+### Moved out of scope (v1)
+#### Pod metrics
+- `GET /api/v1/namespaces/:ns/pods/:pod/metrics` — via `metrics.k8s.io/v1beta1`
+- Graceful degradation: if Metrics Server absent, API returns `metrics_available: false` and UI shows a callout instead of an error
+- CPU (millicores) and memory (MiB) with request/limit context where available
 ---
 
 ## Timeline
@@ -64,7 +70,7 @@
 
 ---
 
-### Week 2 — Observability
+### Week 2 — More Observability
 
 **Goal:** A portal that gives you real signal — logs and events — the two things you reach for first in any incident.
 
@@ -83,12 +89,13 @@
 - Sorted by last timestamp descending
 - Pod detail page shows related events inline
 
-#### Day 4–5: Pod metrics
-- `GET /api/v1/namespaces/:ns/pods/:pod/metrics` — via `metrics.k8s.io/v1beta1`
-- Graceful degradation: if Metrics Server absent, API returns `metrics_available: false` and UI shows a callout instead of an error
-- CPU (millicores) and memory (MiB) with request/limit context where available
+#### Day 4-5: Error handling + resilience
+- Consistent API error envelope: `{ error: string, code: number }`
+- Frontend error boundaries on every data-fetching page
+- Loading skeletons (not spinners) — better perceived performance
+- Handle common failure modes (e.g. namespace not found, pod already terminated, metrics unavailable)
 
-**Checkpoint:** Can view pod log tail, see events, see metrics (or a clear "Metrics Server not available" state).
+**Checkpoint:** Can view pod logs and events, degrade gracefully and get meaning error messages.
 
 ---
 
@@ -96,12 +103,14 @@
 
 **Goal:** Something you'd actually hand to a team to run. Not pretty, but trustworthy.
 
-#### Day 1–2: Error handling + resilience
-- Consistent API error envelope: `{ error: string, code: number }`
-- Frontend error boundaries on every data-fetching page
-- Loading skeletons (not spinners) — better perceived performance
-- Handle common failure modes: namespace not found, pod already terminated, metrics unavailable
-- Consider rate limiting?
+#### Day 1-2: Automated Testing
+- client-go ships a fake clientset (k8s.io/client-go/kubernetes/fake) that lets you seed test data and call your functions against it without a real cluster.
+  - test things like "given a deployment with nil Replicas, DesiredReplicas maps to 0"
+- Handler integration tests:
+  - Verify the full path (routing → handler → client → JSON encoding) using `httptest.NewRecorder()` and `httptest.NewRequest()` with the fake client wired in.
+- Frontend:
+    - Vitest (natural fit, shares Vite config), React Testing Library, jsdom as the test environment, and MSW (Mock Service Worker) for API mocking. MSW is worth the setup — it intercepts at the network level rather than mocking fetch directly, which means tests exercise the actual fetch logic in your query functions.
+- Github actions to automate test execution on every commit
 - Documentation: definintely Go doc comments, maybe API spec
 
 #### Day 3: RBAC + security posture
@@ -118,7 +127,7 @@
 - Image size target: under 50MB
 - Complete `deploy/manifests/` — everything needed to `kubectl apply -f deploy/manifests/`
 - Configurable via environment variables: `KUBEPORTAL_PORT`, `KUBEPORTAL_LOG_LEVEL`
-- - React scaffold: `web/` with Vite + TypeScript + TanStack Router + React Query
+  - React scaffold: `web/` with Vite + TypeScript + TanStack Router + React Query
 - `make dev` runs both API and frontend with hot reload
 - `make deploy-local` builds image, loads into Minikube (`minikube image load`), and applies manifests — primary dev workflow
 - `deploy/manifests/` skeleton: `namespace.yaml`, `serviceaccount.yaml`

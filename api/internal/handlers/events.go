@@ -7,14 +7,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (h *Handler) ListNamespaceEvents(w http.ResponseWriter, r *http.Request) {
-	events, err := h.client.ListNamespaceEvents(
+func (h *Handler) ListEvents(w http.ResponseWriter, r *http.Request) {
+	events, err := h.client.ListEvents(
 		r.Context(),
 		chi.URLParam(r, "ns"),
 		r.URL.Query().Get("involvedObjectName"),
 	)
 	if err != nil {
-		h.writeError(w, http.StatusInternalServerError, "failed to fetch namespace events", err)
+		h.writeError(w, http.StatusInternalServerError, "failed to fetch events", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

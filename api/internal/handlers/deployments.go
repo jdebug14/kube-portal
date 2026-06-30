@@ -13,7 +13,7 @@ func (h *Handler) ListDeployments(w http.ResponseWriter, r *http.Request) {
 		chi.URLParam(r, "ns"),
 	)
 	if err != nil {
-		h.writeError(w, http.StatusInternalServerError, "failed to list deployments", err)
+		h.writeError(w, http.StatusInternalServerError, "failed to fetch deployments", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

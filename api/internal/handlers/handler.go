@@ -23,7 +23,7 @@ func NewHandler(c *k8s.Client, l *slog.Logger) *Handler {
 }
 
 func (h *Handler) writeError(w http.ResponseWriter, code int, message string, cause error) {
-	h.logger.Error("request error", "code", code, "error", message, "cause", cause)
+	h.logger.Error("request error", "code", code, "cause", cause)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(errorResponse{Message: message, Code: code}); err != nil {
