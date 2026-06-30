@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"regexp"
 
 	"github.com/jdebug14/kube-portal/internal/k8s"
 )
@@ -29,4 +31,22 @@ func (h *Handler) writeError(w http.ResponseWriter, code int, message string, ca
 	if err := json.NewEncoder(w).Encode(errorResponse{Message: message, Code: code}); err != nil {
 		h.logger.Error("failed to encode response", "error", err)
 	}
+}
+
+var namespaceRegex = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
+
+func validateNamespaceName(name string) error {
+	if !namespaceRegex.MatchString(name) {
+		return fmt.Errorf("kubernetes namespace names must be 1-63 characters, contain only lowercase alphanumeric and hyphens, and must start and end with an alphanumeric character")
+	}
+	return nil
+}
+
+var resourceRegex = regexp.MustCompile(`^[a-z0-9]([a-z0-9.\-]{0,251}[a-z0-9])?$`)
+
+func validateResourceName(name string) error {
+	if !resourceRegex.MatchString(name) {
+		return fmt.Errorf("kubernetes resource names must be 1-232 characters, contain only lowercase alphanumeric, hyphens and dots, and must start and end with an alphanumeric character")
+	}
+	return nil
 }

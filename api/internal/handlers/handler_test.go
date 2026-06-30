@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -212,7 +213,7 @@ func TestListDeployments_None(t *testing.T) {
 func TestListDeployments_BadRequest(t *testing.T) {
 	// arrange
 	h, _ := setupHandler(t)
-	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{})
+	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{"ns": "Invalidnamespace"})
 	w := httptest.NewRecorder()
 
 	// act
@@ -220,14 +221,15 @@ func TestListDeployments_BadRequest(t *testing.T) {
 
 	// assert
 	result := w.Result()
-	assert.Equal(t, http.StatusOK, result.StatusCode)
+	assert.Equal(t, http.StatusBadRequest, result.StatusCode)
 	assert.NotNil(t, result.Body)
 	body, err := io.ReadAll(result.Body)
 	assert.NoError(t, err)
-	var deployments []types.Deployment
-	err = json.Unmarshal(body, &deployments)
+	var errorResponse errorResponse
+	err = json.Unmarshal(body, &errorResponse)
 	assert.NoError(t, err)
-	assert.Equal(t, 0, len(deployments))
+	assert.Equal(t, http.StatusBadRequest, errorResponse.Code)
+	assert.Contains(t, errorResponse.Message, "invalid namespace")
 }
 
 func TestListDeployments_Error(t *testing.T) {
@@ -337,7 +339,7 @@ func TestListPods_None(t *testing.T) {
 func TestListPods_BadRequest(t *testing.T) {
 	// arrange
 	h, _ := setupHandler(t)
-	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{})
+	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{"ns": "Invalidnamespace"})
 	w := httptest.NewRecorder()
 
 	// act
@@ -345,14 +347,15 @@ func TestListPods_BadRequest(t *testing.T) {
 
 	// assert
 	result := w.Result()
-	assert.Equal(t, http.StatusOK, result.StatusCode)
+	assert.Equal(t, http.StatusBadRequest, result.StatusCode)
 	assert.NotNil(t, result.Body)
 	body, err := io.ReadAll(result.Body)
 	assert.NoError(t, err)
-	var pods []types.Pod
-	err = json.Unmarshal(body, &pods)
+	var errorResponse errorResponse
+	err = json.Unmarshal(body, &errorResponse)
 	assert.NoError(t, err)
-	assert.Equal(t, 0, len(pods))
+	assert.Equal(t, http.StatusBadRequest, errorResponse.Code)
+	assert.Contains(t, errorResponse.Message, "invalid namespace")
 }
 
 func TestListPods_Error(t *testing.T) {
@@ -523,10 +526,80 @@ func TestGetPodDetails_NeverTerminated(t *testing.T) {
 	assert.Nil(t, podDetails.Containers[0].LastExitReason)
 }
 
+func TestGetPodDetails_BadRequest_NS(t *testing.T) {
+	// arrange
+	container1 := &corev1.Container{
+		Name:  "app1",
+		Image: "myrepository/app1",
+	}
+	status1 := &corev1.ContainerStatus{
+		Name:         "app1",
+		Ready:        true,
+		RestartCount: 0,
+	}
+	pod1 := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:         "default",
+			Name:              "pod1",
+			CreationTimestamp: metav1.Now(),
+			Annotations:       map[string]string{"some.test/anno.tation": "123"},
+			Labels:            map[string]string{"hello": "world", "tier": "backend"},
+		},
+		Spec: corev1.PodSpec{
+			NodeName:   "worker-2",
+			Containers: []corev1.Container{*container1},
+		},
+		Status: corev1.PodStatus{
+			Phase:             "Running",
+			ContainerStatuses: []corev1.ContainerStatus{*status1},
+		},
+	}
+	h, _ := setupHandler(t, pod1)
+	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{"ns": "Invalidnamespace", "pn": "pod1"})
+	w := httptest.NewRecorder()
+
+	// act
+	h.GetPodDetail(w, r)
+
+	// assert
+	result := w.Result()
+	assert.Equal(t, http.StatusBadRequest, result.StatusCode)
+	assert.NotNil(t, result.Body)
+	body, err := io.ReadAll(result.Body)
+	assert.NoError(t, err)
+	var errorResponse errorResponse
+	err = json.Unmarshal(body, &errorResponse)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, errorResponse.Code)
+	assert.Contains(t, errorResponse.Message, "invalid namespace")
+}
+
+func TestGetPodDetails_BadRequest_PN(t *testing.T) {
+	// arrange
+	h, _ := setupHandler(t)
+	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{"ns": "default", "pn": "&%$"})
+	w := httptest.NewRecorder()
+
+	// act
+	h.GetPodDetail(w, r)
+
+	// assert
+	result := w.Result()
+	assert.Equal(t, http.StatusBadRequest, result.StatusCode)
+	assert.NotNil(t, result.Body)
+	body, err := io.ReadAll(result.Body)
+	assert.NoError(t, err)
+	var errorResponse errorResponse
+	err = json.Unmarshal(body, &errorResponse)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, errorResponse.Code)
+	assert.Contains(t, errorResponse.Message, "invalid pod")
+}
+
 func TestGetPodDetails_DNE(t *testing.T) {
 	// arrange
 	h, _ := setupHandler(t)
-	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{"ns": "default", "pn": "testpod"})
+	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{"ns": "default", "pn": "pod1"})
 	w := httptest.NewRecorder()
 
 	// act
@@ -534,37 +607,15 @@ func TestGetPodDetails_DNE(t *testing.T) {
 
 	// assert
 	result := w.Result()
-	assert.Equal(t, http.StatusInternalServerError, result.StatusCode)
+	assert.Equal(t, http.StatusNotFound, result.StatusCode)
 	assert.NotNil(t, result.Body)
 	body, err := io.ReadAll(result.Body)
 	assert.NoError(t, err)
 	var errorResponse errorResponse
 	err = json.Unmarshal(body, &errorResponse)
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusInternalServerError, errorResponse.Code)
-	assert.Equal(t, "failed to retrieve pod details", errorResponse.Message)
-}
-
-func TestGetPodDetails_BadRequest(t *testing.T) {
-	// arrange
-	h, _ := setupHandler(t)
-	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{"ns": "default"})
-	w := httptest.NewRecorder()
-
-	// act
-	h.GetPodDetail(w, r)
-
-	// assert
-	result := w.Result()
-	assert.Equal(t, http.StatusInternalServerError, result.StatusCode)
-	assert.NotNil(t, result.Body)
-	body, err := io.ReadAll(result.Body)
-	assert.NoError(t, err)
-	var errorResponse errorResponse
-	err = json.Unmarshal(body, &errorResponse)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusInternalServerError, errorResponse.Code)
-	assert.Equal(t, "failed to retrieve pod details", errorResponse.Message)
+	assert.Equal(t, http.StatusNotFound, errorResponse.Code)
+	assert.Equal(t, "pod not found", errorResponse.Message)
 }
 
 func TestGetPodDetails_Error(t *testing.T) {
@@ -777,10 +828,10 @@ func TestGetEvents_None(t *testing.T) {
 	assert.Equal(t, 0, len(events))
 }
 
-func TestGetEvents_BadRequest(t *testing.T) {
+func TestGetEvents_BadRequest_NS(t *testing.T) {
 	// arrange
 	h, _ := setupHandler(t)
-	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{})
+	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{"ns": "Invalidnamepace"})
 	w := httptest.NewRecorder()
 
 	// act
@@ -788,14 +839,37 @@ func TestGetEvents_BadRequest(t *testing.T) {
 
 	// assert
 	result := w.Result()
-	assert.Equal(t, http.StatusOK, result.StatusCode)
+	assert.Equal(t, http.StatusBadRequest, result.StatusCode)
 	assert.NotNil(t, result.Body)
 	body, err := io.ReadAll(result.Body)
 	assert.NoError(t, err)
-	var events []types.Event
-	err = json.Unmarshal(body, &events)
+	var errorResponse errorResponse
+	err = json.Unmarshal(body, &errorResponse)
 	assert.NoError(t, err)
-	assert.Equal(t, 0, len(events))
+	assert.Equal(t, http.StatusBadRequest, errorResponse.Code)
+	assert.Contains(t, errorResponse.Message, "invalid namespace")
+}
+
+func TestGetEvents_BadRequest_Filter(t *testing.T) {
+	// arrange
+	h, _ := setupHandler(t)
+	r := newRequestWithParams(t, http.MethodGet, "/some/test/request?involvedObjectName=Invalidpodname", map[string]string{"ns": "default"})
+	w := httptest.NewRecorder()
+
+	// act
+	h.ListEvents(w, r)
+
+	// assert
+	result := w.Result()
+	assert.Equal(t, http.StatusBadRequest, result.StatusCode)
+	assert.NotNil(t, result.Body)
+	body, err := io.ReadAll(result.Body)
+	assert.NoError(t, err)
+	var errorResponse errorResponse
+	err = json.Unmarshal(body, &errorResponse)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, errorResponse.Code)
+	assert.Contains(t, errorResponse.Message, "invalid object filter")
 }
 
 func TestGetEvents_Error(t *testing.T) {
@@ -821,6 +895,82 @@ func TestGetEvents_Error(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusInternalServerError, errorResponse.Code)
 	assert.Equal(t, "failed to fetch events", errorResponse.Message)
+}
+
+func TestValidateNamespaceName(t *testing.T) {
+	tests := []struct {
+		caseName  string
+		name      string
+		expectErr bool
+	}{
+		{caseName: "only alphanumeric", name: "mynamespace"},
+		{caseName: "with numbers", name: "mynam35pace"},
+		{caseName: "with hypens", name: "my-namespace"},
+		{caseName: "with numbers and hyphens", name: "my-nam35pace"},
+		{caseName: "only numbers", name: "123"},
+		{caseName: "start with number", name: "123mynamespace"},
+		{caseName: "end with number", name: "mynamepace123"},
+		{caseName: "one", name: "a"},
+		{caseName: "two", name: "ab"},
+		{caseName: "exactly at cap", name: strings.Repeat("a", 63)},
+		{caseName: "over cap", name: strings.Repeat("a", 64), expectErr: true},
+		{caseName: "uppercase", name: "myNamespace", expectErr: true},
+		{caseName: "whitespace", name: "my namespace", expectErr: true},
+		{caseName: "empty string", name: "", expectErr: true},
+		{caseName: "start with hyphen", name: "-mynamespace", expectErr: true},
+		{caseName: "end with hyphen", name: "mynamespace-", expectErr: true},
+		{caseName: "underscore", name: "my_namespace", expectErr: true},
+		{caseName: "dot", name: "my.namespace", expectErr: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.caseName, func(t *testing.T) {
+			err := validateNamespaceName(tc.name)
+			if tc.expectErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestValidateResourceName(t *testing.T) {
+	tests := []struct {
+		caseName  string
+		name      string
+		expectErr bool
+	}{
+		{caseName: "only alphanumeric", name: "myresource"},
+		{caseName: "with numbers", name: "myr35ource"},
+		{caseName: "with hypens", name: "my-resource"},
+		{caseName: "with numbers and hyphens", name: "my-r35ource"},
+		{caseName: "only numbers", name: "123"},
+		{caseName: "start with number", name: "123myresource"},
+		{caseName: "end with number", name: "myresource123"},
+		{caseName: "one", name: "a"},
+		{caseName: "two", name: "ab"},
+		{caseName: "exactly at cap", name: strings.Repeat("a", 253)},
+		{caseName: "over cap", name: strings.Repeat("a", 254), expectErr: true},
+		{caseName: "uppercase", name: "myResource", expectErr: true},
+		{caseName: "whitespace", name: "my resource", expectErr: true},
+		{caseName: "empty string", name: "", expectErr: true},
+		{caseName: "start with hyphen", name: "-myresource", expectErr: true},
+		{caseName: "end with hyphen", name: "myresource-", expectErr: true},
+		{caseName: "underscore", name: "my_resource", expectErr: true},
+		{caseName: "dot", name: "my.resource"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.caseName, func(t *testing.T) {
+			err := validateResourceName(tc.name)
+			if tc.expectErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
 }
 
 func TestParseTailLines(t *testing.T) {
