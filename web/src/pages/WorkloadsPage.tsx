@@ -1,5 +1,6 @@
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
 import EventsFeed from '../components/EventsFeed'
 import { apiFetch } from '../api/client'
 
@@ -20,6 +21,8 @@ function WorkloadsPage() {
         queryKey: ['pods', ns],
         queryFn: () => apiFetch<Pod[]>(url, r => r.json()),
     })
+  const [ searchTerm, setSearchTerm ] = useState("");
+  const filteredData = useMemo(() => { return data?.filter(pod => (pod.name.includes(searchTerm))) }, [searchTerm, data])
 
   return (
     <div>
@@ -28,8 +31,14 @@ function WorkloadsPage() {
       {isError && <div>Error: {error.message}</div>}
       {data && (<div>
       <h2>{ns}</h2>
+      <input
+        type='text'
+        placeholder='Type to search...'
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}>
+      </input>
       <ul>
-        {data.map(pod => (
+        {filteredData?.map(pod => (
           <li key={pod.name}>
             <Link to="/namespaces/$ns/pods/$pn" params={{ns: ns, pn: pod.name}}>{pod.name}</Link> [{pod.phase}]
           </li>
