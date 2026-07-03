@@ -25,28 +25,30 @@ function WorkloadsPage() {
   const filteredData = useMemo(() => { return data?.filter(pod => (pod.name.includes(searchTerm))) }, [searchTerm, data])
 
   return (
-    <div>
+    <>
       <Link to="/">← Namespaces</Link>
-      {isLoading && <div>Loading...</div>}
-      {isError && <div>Error: {error.message}</div>}
-      {data && (<div>
-      <h2>{ns}</h2>
-      <input
-        type='text'
-        placeholder='Type to search...'
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}>
-      </input>
-      <ul>
-        {filteredData?.map(pod => (
-          <li key={pod.name}>
-            <Link to="/namespaces/$ns/pods/$pn" params={{ns: ns, pn: pod.name}}>{pod.name}</Link> [{pod.phase}]
-          </li>
-        ))}
-      </ul>
-      <EventsFeed namespace={ns} />
-      </div>)}
-    </div>
+      {isLoading && <>Loading...</>}
+      {isError && <>Error: {error.message}</>}
+      {data && (
+        <>
+        <h2>{ns}</h2>
+        <input
+          type='text'
+          placeholder='Type to search...'
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}>
+        </input>
+        <ul>
+          {filteredData?.map(pod => (
+            <li key={pod.name}>
+              <Link to="/namespaces/$ns/pods/$pn" params={{ns: ns, pn: pod.name}}>{pod.name}</Link> [{pod.phase}]
+            </li>
+          ))}
+        </ul>
+        <EventsFeed namespace={ns} />
+        </>
+      )}
+    </>
   )
 }
 

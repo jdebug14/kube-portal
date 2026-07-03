@@ -15,8 +15,8 @@ function NamespacesPage() {
         queryFn: () => apiFetch<Namespace[]>(url, r => r.json()),
     })
     
-    if (isLoading) return <div>Loading...</div>
-    if (isError) return <div>Error: {error.message}</div>
+    if (isLoading) return <>Loading...</>
+    if (isError) return <>Error: {error.message}</>
     return (
         <ul>
             {data?.map(ns => (

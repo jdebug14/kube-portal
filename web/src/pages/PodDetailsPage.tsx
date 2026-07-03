@@ -39,36 +39,36 @@ function PodDetailsPage() {
   const labelEntries = data ? Object.entries(data.labels ?? {}) : []
 
   return (
-    <div>
+    <>
       <Link to='/namespaces/$ns' params={{ ns }}>← {ns}/Pods</Link>
-      {isLoading && <div>Loading...</div>}
-      {isError && <div>Error: {error.message}</div>}
-      {data && (<div>
+      {isLoading && <p>Loading...</p>}
+      {isError && <p>Error: {error.message}</p>}
+      {data && (
+        <>
         <h2>{pn}</h2>
-        <div>Status: {data.phase}</div>
-        <div>Host node: {data.host_node}</div>
-        <div>Created at: {data.created_at}</div>
+        <p>Status: {data.phase}</p>
+        <p>Host node: {data.host_node}</p>
+        <p>Created at: {data.created_at}</p>
         <KeyValueList title='Annotations' entries={annotationEntries}/>
         <KeyValueList title='Labels' entries={labelEntries}/>
-        <div>
-          Containers:
+        <p>Containers:</p>
           <ul>
             {data.containers.map(container => (
               <li key={container.name}>
-                <div>Name:{container.name}</div>
-                <div>Image: {container.image}</div>
-                <div>Ready: {String(container.ready)}</div>
-                <div>Restarts: {container.restarts}</div>
-                {container.last_exit_time && <div>Last Termination At: {container.last_exit_time}</div>}
-                {container.last_exit_reason && <div>Last Termination Reason: {container.last_exit_reason}</div>}
+                Name:{container.name}
+                <br/>Image: {container.image}
+                <br/>Ready: {String(container.ready)}
+                <br/>Restarts: {container.restarts}
+                <br/>{container.last_exit_time && <>Last Termination At: {container.last_exit_time}</>}
+                <br/>{container.last_exit_reason && <>Last Termination Reason: {container.last_exit_reason}</>}
               </li>
             ))}
           </ul>
-        </div>
         <EventsFeed namespace={ns} involvedObjectName={pn} />
         <PodLogsViewer namespace={ns} podName={pn} containers={data.containers.map(c => c.name)} />
-      </div>)}
-    </div>
+        </>
+      )}
+    </>
   )
 }
 

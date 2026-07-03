@@ -28,10 +28,10 @@ function EventsFeed({ namespace, involvedObjectName }: { namespace: string, invo
         refetchInterval: refetchIntervalSeconds * 1000
     })
     return (
-        <div>
-            {isLoading && <div>Loading...</div>}
-            {isFetching && !isLoading && <div>Refreshing...</div>}
-            {isError && <div>Error: {error.message}</div>}
+        <>
+            {isLoading && <>Loading...</>}
+            {isFetching && !isLoading && <>Refreshing...</>}
+            {isError && <>Error: {error.message}</>}
             <h2>Events</h2>
             Refetch interval: <select value={refetchIntervalSeconds} onChange={e => setRefetchIntervalSeconds(Number(e.target.value))}>
                 <option value={0}>Never</option>
@@ -46,7 +46,7 @@ function EventsFeed({ namespace, involvedObjectName }: { namespace: string, invo
                     </li>
                 ))}
             </ul>
-        </div>
+        </>
     )
 }
 

@@ -22,10 +22,10 @@ function PodLogsViewer({ namespace, podName, containers }: LogViewerProps) {
     })
 
     return (
-        <div>
-            {isLoading && <div>Loading...</div>}
-            {isFetching && !isLoading && <div>Refreshing...</div>}
-            {isError && <div>Error: {error.message}</div>}
+        <>
+            {isLoading && <>Loading...</>}
+            {isFetching && !isLoading && <>Refreshing...</>}
+            {isError && <>Error: {error.message}</>}
             <h2>Logs</h2>
             Container: <select value={container} onChange={e => setContainer(e.target.value)}>
                 {containers?.map(c => (
@@ -48,7 +48,7 @@ function PodLogsViewer({ namespace, podName, containers }: LogViewerProps) {
             <pre>
                 { data }
             </pre>
-        </div>
+        </>
     )
 }
 

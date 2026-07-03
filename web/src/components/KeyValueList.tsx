@@ -1,6 +1,6 @@
 function KeyValueList({ title, entries }: { title: string, entries: [string, string][] }) {
   return (
-    <div>
+    <>
       {title}:
       {entries.length > 0 ? (
         <ul>
@@ -9,7 +9,7 @@ function KeyValueList({ title, entries }: { title: string, entries: [string, str
           ))}
         </ul>) : (<div>None</div>)
       }
-    </div>
+    </>
   )
 }
 
