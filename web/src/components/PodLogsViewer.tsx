@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../api/client';
+import OptionSelect from './OptionSelect';
 
 interface LogViewerProps {
     namespace: string
@@ -8,7 +9,7 @@ interface LogViewerProps {
     containers?: string[]
 }
 
-function PodLogsViewer({ namespace, podName, containers }: LogViewerProps) {
+export default function PodLogsViewer({ namespace, podName, containers }: LogViewerProps) {
     const [tailLines, setTailLines] = useState(100)
     const [container, setContainer] = useState(containers ? containers[0] : '')
     const [refetchIntervalSeconds, setRefetchIntervalSeconds] = useState(0)
@@ -23,33 +24,34 @@ function PodLogsViewer({ namespace, podName, containers }: LogViewerProps) {
 
     return (
         <>
+            <h2>Logs</h2>
             {isLoading && <>Loading...</>}
             {isFetching && !isLoading && <>Refreshing...</>}
             {isError && <>Error: {error.message}</>}
-            <h2>Logs</h2>
-            Container: <select value={container} onChange={e => setContainer(e.target.value)}>
-                {containers?.map(c => (
-                    <option key={c} value={c}>{c}</option>
-                ))}
-            </select>
-            Number of lines: <select value={tailLines} onChange={e => setTailLines(Number(e.target.value))}>
-                <option value={10}>10</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-                <option value={500}>500</option>
-                <option value={1000}>1000</option>
-            </select>
-            Refetch interval: <select value={refetchIntervalSeconds} onChange={e => setRefetchIntervalSeconds(Number(e.target.value))}>
-                <option value={0}>Never</option>
-                <option value={10}>10 sec</option>
-                <option value={60}>1 min</option>
-                <option value={300}>5 min</option>
-            </select>
+            <OptionSelect 
+                label='Container: '
+                kind='string'
+                value={container}
+                changeHandler={setContainer}
+                options={containers && containers.map(c => [c, c]) || []}>
+            </OptionSelect>
+            <OptionSelect
+                label='Number of lines: '
+                kind='number'
+                value={tailLines} 
+                changeHandler={setTailLines}
+                options={[['10', 10], ['50', 50], ['100', 100], ['500', 500], ['1000', 1000]]}>
+            </OptionSelect>
+            <OptionSelect 
+                label='Refetch interval: '
+                kind='number'
+                value={refetchIntervalSeconds}
+                changeHandler={setRefetchIntervalSeconds}
+                options={[['Never', 0], ['10 sec', 10], ['1 min', 60], ['5 min', 300]]} >
+            </OptionSelect>
             <pre>
                 { data }
             </pre>
         </>
     )
 }
-
-export default PodLogsViewer

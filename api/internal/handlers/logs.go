@@ -59,8 +59,8 @@ func parseTailLines(raw string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	if tailLines < 100 {
-		return 0, fmt.Errorf("tailLines cannot be negative")
+	if tailLines <= 0 {
+		return 0, fmt.Errorf("tailLines must be a positive integer")
 	}
 	if tailLines > 1000 {
 		tailLines = 1000

@@ -1,4 +1,4 @@
-function KeyValueList({ title, entries }: { title: string, entries: [string, string][] }) {
+export default function KeyValueList({ title, entries }: { title: string, entries: [string, string][] }) {
   return (
     <>
       {title}:
@@ -12,5 +12,3 @@ function KeyValueList({ title, entries }: { title: string, entries: [string, str
     </>
   )
 }
-
-export default KeyValueList

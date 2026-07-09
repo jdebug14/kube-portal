@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../api/client'
+import OptionSelect from './OptionSelect';
 
 interface EventInvolvedObject {
   kind: string
@@ -18,7 +19,7 @@ interface Event {
     involved_object: EventInvolvedObject
 }
 
-function EventsFeed({ namespace, involvedObjectName }: { namespace: string, involvedObjectName?: string }) {
+export default function EventsFeed({ namespace, involvedObjectName }: { namespace: string, involvedObjectName?: string }) {
     const url = `/api/v1/namespaces/${namespace}/events`
     + (involvedObjectName ? `?involvedObjectName=${involvedObjectName}` : '')
     const [refetchIntervalSeconds, setRefetchIntervalSeconds] = useState(0)
@@ -29,25 +30,24 @@ function EventsFeed({ namespace, involvedObjectName }: { namespace: string, invo
     })
     return (
         <>
-            {isLoading && <>Loading...</>}
-            {isFetching && !isLoading && <>Refreshing...</>}
-            {isError && <>Error: {error.message}</>}
-            <h2>Events</h2>
-            Refetch interval: <select value={refetchIntervalSeconds} onChange={e => setRefetchIntervalSeconds(Number(e.target.value))}>
-                <option value={0}>Never</option>
-                <option value={10}>10 sec</option>
-                <option value={60}>1 min</option>
-                <option value={300}>5 min</option>
-            </select>
-            <ul>
-                {data?.map(event => (
-                    <li key={`${event.involved_object.name}-${event.reason}-${event.first_time}`}>
-                        type={event.type}, name={event.involved_object.name}, reason={event.reason}, message={event.message}, count={event.count}, lastseen={event.last_time}
-                    </li>
-                ))}
-            </ul>
+        <h2>Events</h2>
+        {isLoading && <>Loading...</>}
+        {isFetching && !isLoading && <>Refreshing...</>}
+        {isError && <>Error: {error.message}</>}
+        <OptionSelect 
+            label='Refetch interval: '
+            kind='number'
+            value={refetchIntervalSeconds}
+            changeHandler={setRefetchIntervalSeconds}
+            options={[['Never', 0], ['10 sec', 10], ['1 min', 60], ['5 min', 300]]} >
+        </OptionSelect>
+        <ul>
+            {data?.map(event => (
+                <li key={`${event.involved_object.name}-${event.reason}-${event.first_time}`}>
+                    type={event.type}, name={event.involved_object.name}, reason={event.reason}, message={event.message}, count={event.count}, lastseen={event.last_time}
+                </li>
+            ))}
+        </ul>
         </>
     )
 }
-
-export default EventsFeed

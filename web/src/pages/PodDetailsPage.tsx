@@ -27,7 +27,7 @@ interface PodDetails {
     containers: Container[]
 }
 
-function PodDetailsPage() {
+export default function PodDetailsPage() {
   const { ns, pn } = routeApi.useParams()
   const url = `/api/v1/namespaces/${ns}/pods/${pn}`
   const { data, isLoading, isError, error } = useQuery({
@@ -71,5 +71,3 @@ function PodDetailsPage() {
     </>
   )
 }
-
-export default PodDetailsPage

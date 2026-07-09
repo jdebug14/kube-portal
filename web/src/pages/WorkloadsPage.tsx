@@ -14,7 +14,7 @@ interface Pod {
     created_at: string
 }
 
-function WorkloadsPage() {
+export default function WorkloadsPage() {
   const { ns } = routeApi.useParams()
   const url = `/api/v1/namespaces/${ns}/pods`
   const { data, isLoading, isError, error } = useQuery({
@@ -51,5 +51,3 @@ function WorkloadsPage() {
     </>
   )
 }
-
-export default WorkloadsPage

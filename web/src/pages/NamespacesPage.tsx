@@ -8,7 +8,7 @@ interface Namespace {
     created_at: string
 }
 
-function NamespacesPage() {
+export default function NamespacesPage() {
     const url = `/api/v1/namespaces`
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['namespaces'],
@@ -27,5 +27,3 @@ function NamespacesPage() {
         </ul>
     )
 }
-
-export default NamespacesPage
