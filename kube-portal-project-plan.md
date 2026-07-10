@@ -220,7 +220,6 @@ kube-portal/
 - [ ] Can view last N lines of logs from any pod; graceful message if pod has no logs
 - [ ] Link to external log platform shown in log view (if configured)
 - [ ] Can view Kubernetes events, namespace-scoped
-- [ ] Pod metrics shown where Metrics Server is available; graceful fallback where it isn't
 - [ ] `kubectl apply -f deploy/manifests/` deploys the portal to a cluster with no manual steps
 - [ ] Portal pod runs non-root with a read-only filesystem
 - [ ] No raw Kubernetes API types exposed directly to the frontend
@@ -234,4 +233,4 @@ kube-portal/
 2. **Errors are first-class.** Every handler returns a typed error. Every UI state accounts for loading, error, and empty — not just the happy path.
 3. **No raw k8s types on the wire.** Map to our own response types. This is the most important seam in the whole system.
 4. **URLs are state.** Selected namespace, pod name, log cursor — all in the URL. Deep-linkable from day one.
-5. **Degrade gracefully.** If Metrics Server is absent, say so clearly. If a pod has no logs, say so. Never a blank screen.
+5. **Degrade gracefully.** If a pod has no logs, say so. Never a blank screen.

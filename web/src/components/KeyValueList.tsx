@@ -1,14 +1,26 @@
-export default function KeyValueList({ title, entries }: { title: string, entries: [string, string][] }) {
+import InfoMessage from "./InfoMessage";
+
+export default function KeyValueList({
+  title,
+  entries,
+}: {
+  title: string;
+  entries: [string, string][];
+}) {
   return (
     <>
       {title}:
       {entries.length > 0 ? (
         <ul>
           {entries.map(([key, value]) => (
-            <li key={key}>{key}: {value}</li>
+            <li key={key}>
+              {key}: {value}
+            </li>
           ))}
-        </ul>) : (<div>None</div>)
-      }
+        </ul>
+      ) : (
+        <InfoMessage message="None"></InfoMessage>
+      )}
     </>
-  )
+  );
 }

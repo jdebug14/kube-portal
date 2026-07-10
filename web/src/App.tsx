@@ -1,4 +1,4 @@
-import { Outlet } from "@tanstack/react-router"
+import { Outlet } from "@tanstack/react-router";
 
 function App() {
   return (
@@ -6,7 +6,7 @@ function App() {
       <h1>KubePortal</h1>
       <Outlet />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
