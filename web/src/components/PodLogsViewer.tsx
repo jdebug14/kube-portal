@@ -69,10 +69,9 @@ export default function PodLogsViewer({
       {data ? (
         <pre>{data}</pre>
       ) : (
-        <InfoMessage
-          message="No logs to show. The
-          container may still be waiting to start."
-        ></InfoMessage>
+        <InfoMessage>
+          No logs to show. The container may still be waiting to start.
+        </InfoMessage>
       )}
     </>
   );

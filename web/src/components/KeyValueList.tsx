@@ -9,7 +9,7 @@ export default function KeyValueList({
 }) {
   return (
     <>
-      {title}:
+      <strong>{title}:</strong>
       {entries.length > 0 ? (
         <ul>
           {entries.map(([key, value]) => (
@@ -19,7 +19,7 @@ export default function KeyValueList({
           ))}
         </ul>
       ) : (
-        <InfoMessage message="None"></InfoMessage>
+        <InfoMessage>None</InfoMessage>
       )}
     </>
   );

@@ -48,12 +48,20 @@ export default function PodDetailsPage() {
       {data && (
         <>
           <h2>{pn}</h2>
-          <p>Status: {data.phase}</p>
-          <p>Host node: {data.host_node}</p>
-          <p>Created at: {data.created_at}</p>
+          <p>
+            <strong>Status:</strong> {data.phase}
+          </p>
+          <p>
+            <strong>Host node:</strong> {data.host_node}
+          </p>
+          <p>
+            <strong>Created at:</strong> {data.created_at}
+          </p>
           <KeyValueList title="Annotations" entries={annotationEntries} />
           <KeyValueList title="Labels" entries={labelEntries} />
-          <p>Containers:</p>
+          <p>
+            <strong>Containers:</strong>
+          </p>
           <ul>
             {data.containers.map((container) => (
               <li key={container.name}>

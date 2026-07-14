@@ -68,10 +68,9 @@ export default function EventsFeed({
           ))}
         </ul>
       ) : (
-        <InfoMessage
-          message="No events to show.
-          Events have a limited retention time."
-        ></InfoMessage>
+        <InfoMessage>
+          No events to show. Events have a limited retention time.
+        </InfoMessage>
       )}
     </>
   );
