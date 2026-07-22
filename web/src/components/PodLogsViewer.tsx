@@ -21,7 +21,7 @@ export default function PodLogsViewer({
   const url =
     `/api/v1/namespaces/${namespace}/pods/${podName}/logs` +
     `?tailLines=${tailLines}` +
-    `&container=${container}`;
+    (container ? `&container=${container}` : "");
   const { data, isLoading, isFetching, isError, error } = useQuery({
     queryKey: ["podLogs", podName, namespace, tailLines, container],
     queryFn: () => apiFetch(url, (r) => r.text()),
@@ -31,9 +31,6 @@ export default function PodLogsViewer({
   return (
     <>
       <h2>Logs</h2>
-      {isLoading && <>Loading...</>}
-      {isFetching && !isLoading && <>Refreshing...</>}
-      {isError && <>Error: {error.message}</>}
       <OptionSelect
         label="Container: "
         kind="string"
@@ -53,7 +50,7 @@ export default function PodLogsViewer({
           ["500", 500],
           ["1000", 1000],
         ]}
-      ></OptionSelect>
+      />
       <OptionSelect
         label="Refetch interval: "
         kind="number"
@@ -65,7 +62,10 @@ export default function PodLogsViewer({
           ["1 min", 60],
           ["5 min", 300],
         ]}
-      ></OptionSelect>
+      />
+      {isLoading && <>Loading...</>}
+      {isFetching && !isLoading && <>Refreshing...</>}
+      {isError && <>Error: {error.message}</>}
       {data ? (
         <pre>{data}</pre>
       ) : (

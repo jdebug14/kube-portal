@@ -40,9 +40,6 @@ export default function EventsFeed({
   return (
     <>
       <h2>Events</h2>
-      {isLoading && <>Loading...</>}
-      {isFetching && !isLoading && <>Refreshing...</>}
-      {isError && <>Error: {error.message}</>}
       <OptionSelect
         label="Refetch interval: "
         kind="number"
@@ -54,7 +51,10 @@ export default function EventsFeed({
           ["1 min", 60],
           ["5 min", 300],
         ]}
-      ></OptionSelect>
+      />
+      {isLoading && <>Loading...</>}
+      {isFetching && !isLoading && <>Refreshing...</>}
+      {isError && <>Error: {error.message}</>}
       {data && data.length > 0 ? (
         <ul>
           {data?.map((event) => (

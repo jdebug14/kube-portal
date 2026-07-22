@@ -1,14 +1,14 @@
 import { screen } from "@testing-library/react";
 import { expect, test } from "vitest";
-import { renderAtPath } from "../test/render-with-router";
+import { renderWithRouter } from "../test/render.tsx";
 import userEvent from "@testing-library/user-event";
 import { server } from "../test/server.ts";
 import { http, HttpResponse, delay } from "msw";
 
 const user = userEvent.setup();
 
-test("with namespaces", async () => {
-  renderAtPath("/");
+test("happy path", async () => {
+  renderWithRouter("/");
 
   expect(await screen.findByText("test-namespace-1")).toBeInTheDocument();
   expect(await screen.findByText("test-namespace-2")).toBeInTheDocument();
@@ -31,6 +31,17 @@ test("with namespaces", async () => {
   expect(screen.getByText("No namespaces to show.")).toBeInTheDocument();
 });
 
+test("no namespaces", async () => {
+  server.use(
+    http.get("/api/v1/namespaces", () => {
+      return HttpResponse.json([]);
+    }),
+  );
+  renderWithRouter("/");
+
+  expect(await screen.findByText("No namespaces to show.")).toBeInTheDocument();
+});
+
 test("shows error state", async () => {
   server.use(
     http.get("/api/v1/namespaces", () => {
@@ -40,7 +51,7 @@ test("shows error state", async () => {
       );
     }),
   );
-  renderAtPath("/");
+  renderWithRouter("/");
 
   expect(
     await screen.findByText("Error: service unavailable"),
@@ -59,7 +70,7 @@ test(
         return HttpResponse.json([]);
       }),
     );
-    renderAtPath("/");
+    renderWithRouter("/");
 
     expect(await screen.findByText("Loading...")).toBeInTheDocument();
     expect(

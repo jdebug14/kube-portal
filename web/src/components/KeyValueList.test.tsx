@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { expect, test } from "vitest";
 import KeyValueList from "./KeyValueList";
 
-test("with entries", () => {
+test("happy path", () => {
   render(
     <KeyValueList
       title="Labels"
@@ -17,7 +17,7 @@ test("with entries", () => {
   expect(screen.getByText("hello: world")).toBeInTheDocument();
 });
 
-test("empty entries", () => {
+test("empty", () => {
   render(<KeyValueList title="Labels" entries={[]}></KeyValueList>);
 
   expect(screen.getByText("Labels:")).toBeInTheDocument();

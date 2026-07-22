@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
-import { renderAtPath } from "../test/render-with-router";
+import { renderWithRouter } from "../test/render.tsx";
 import userEvent from "@testing-library/user-event";
 import { server } from "../test/server.ts";
 import { http, HttpResponse, delay } from "msw";
@@ -8,28 +8,34 @@ import { http, HttpResponse, delay } from "msw";
 const user = userEvent.setup();
 vi.mock("../components/EventsFeed", () => ({ default: () => null }));
 
-test("with workloads", async () => {
-  renderAtPath("/namespaces/test-namespace-1");
+test("happy path", async () => {
+  renderWithRouter("/namespaces/test-namespace-1");
 
-  expect(await screen.findByText("workload1")).toBeInTheDocument();
-  expect(await screen.findByText("workload2")).toBeInTheDocument();
-  expect(await screen.findByText("workload3")).toBeInTheDocument();
+  expect(await screen.findByText("workload-1")).toBeInTheDocument();
+  expect(await screen.findByText("workload-2")).toBeInTheDocument();
+  expect(await screen.findByText("workload-3")).toBeInTheDocument();
 
   const filterInput = screen.getByPlaceholderText("Type to search...");
   await user.type(filterInput, "1");
-  expect(await screen.findByText("workload1")).toBeInTheDocument();
-  expect(screen.queryByText("workload2")).toBeNull();
-  expect(screen.queryByText("workload3")).toBeNull();
+  expect(await screen.findByText("workload-1")).toBeInTheDocument();
+  expect(screen.queryByText("workload-2")).toBeNull();
+  expect(screen.queryByText("workload-3")).toBeNull();
 
   await user.clear(filterInput);
   await user.type(filterInput, "work");
-  expect(await screen.findByText("workload1")).toBeInTheDocument();
-  expect(await screen.findByText("workload2")).toBeInTheDocument();
-  expect(await screen.findByText("workload3")).toBeInTheDocument();
+  expect(await screen.findByText("workload-1")).toBeInTheDocument();
+  expect(await screen.findByText("workload-2")).toBeInTheDocument();
+  expect(await screen.findByText("workload-3")).toBeInTheDocument();
 
   await user.clear(filterInput);
   await user.type(filterInput, "works");
   expect(screen.getByText("No workloads to show.")).toBeInTheDocument();
+});
+
+test("no workloads", async () => {
+  renderWithRouter("/namespaces/test-namespace-2");
+
+  expect(await screen.findByText("No workloads to show.")).toBeInTheDocument();
 });
 
 test("shows error state", async () => {
@@ -41,7 +47,7 @@ test("shows error state", async () => {
       );
     }),
   );
-  renderAtPath("/namespaces/test-namespace-1");
+  renderWithRouter("/namespaces/test-namespace-1");
 
   expect(
     await screen.findByText("Error: service unavailable"),
@@ -60,7 +66,7 @@ test(
         return HttpResponse.json([]);
       }),
     );
-    renderAtPath("/namespaces/test-namespace-1");
+    renderWithRouter("/namespaces/test-namespace-1");
 
     expect(await screen.findByText("Loading...")).toBeInTheDocument();
     expect(
