@@ -86,7 +86,7 @@ export default function EventsFeed({
             </ul>
           ) : (
             <Notice type="info">
-              Nothing to see here.Events have a limited retention time.
+              Nothing to see here. Events have a limited retention time.
             </Notice>
           )}
         </>

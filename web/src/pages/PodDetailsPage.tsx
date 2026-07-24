@@ -74,30 +74,30 @@ export default function PodDetailsPage() {
           </p>
           <KeyValueList title="Annotations" entries={annotationEntries} />
           <KeyValueList title="Labels" entries={labelEntries} />
-          <p>
+          <>
             <strong>Containers:</strong>
-          </p>
-          <ul>
-            {data.containers.map((container) => (
-              <li key={container.name}>
-                Name:{container.name}
-                <br />
-                Image: {container.image}
-                <br />
-                Ready: {String(container.ready)}
-                <br />
-                Restarts: {container.restarts}
-                <br />
-                {container.last_exit_time && (
-                  <>Last Termination At: {container.last_exit_time}</>
-                )}
-                <br />
-                {container.last_exit_reason && (
-                  <>Last Termination Reason: {container.last_exit_reason}</>
-                )}
-              </li>
-            ))}
-          </ul>
+            <ul>
+              {data.containers.map((container) => (
+                <li key={container.name}>
+                  Name: {container.name}
+                  <br />
+                  Image: {container.image}
+                  <br />
+                  Ready: {String(container.ready)}
+                  <br />
+                  Restarts: {container.restarts}
+                  <br />
+                  {container.last_exit_time && (
+                    <>Last Termination At: {container.last_exit_time}</>
+                  )}
+                  <br />
+                  {container.last_exit_reason && (
+                    <>Last Termination Reason: {container.last_exit_reason}</>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </>
           <EventsFeed namespace={ns} involvedObjectName={pn} />
           <PodLogsViewer
             namespace={ns}

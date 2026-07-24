@@ -87,6 +87,11 @@ test("workload events", async () => {
 });
 
 test("empty", async () => {
+  server.use(
+    http.get("/api/v1/namespaces/test-namespace-2/events", () => {
+      return HttpResponse.json([]);
+    }),
+  );
   renderWithQueryClient(<EventsFeed namespace="test-namespace-2" />);
 
   expect(await screen.findByText(/Nothing to see here/)).toBeInTheDocument();
