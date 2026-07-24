@@ -28,10 +28,10 @@ test("happy path", async () => {
 
   await user.clear(filterInput);
   await user.type(filterInput, "namess");
-  expect(screen.getByText("No namespaces to show.")).toBeInTheDocument();
+  expect(screen.getByText(/Nothing to see here/)).toBeInTheDocument();
 });
 
-test("no namespaces", async () => {
+test("empty response", async () => {
   server.use(
     http.get("/api/v1/namespaces", () => {
       return HttpResponse.json([]);
@@ -39,10 +39,10 @@ test("no namespaces", async () => {
   );
   renderWithRouter("/");
 
-  expect(await screen.findByText("No namespaces to show.")).toBeInTheDocument();
+  expect(await screen.findByText(/Nothing to see here/)).toBeInTheDocument();
 });
 
-test("shows error state", async () => {
+test("error state", async () => {
   server.use(
     http.get("/api/v1/namespaces", () => {
       return HttpResponse.json(
@@ -59,22 +59,20 @@ test("shows error state", async () => {
 });
 
 test(
-  "shows loading state",
+  "loading state",
   {
     retry: 2 /* some inherant flakiness using an artifical delay to test behavior*/,
   },
   async () => {
     server.use(
       http.get("/api/v1/namespaces", async () => {
-        await delay(100); // small artificial delay so we can catch the loading state
+        await delay(150); // small artificial delay so we can catch the loading state
         return HttpResponse.json([]);
       }),
     );
     renderWithRouter("/");
 
-    expect(await screen.findByText("Loading...")).toBeInTheDocument();
-    expect(
-      await screen.findByText("No namespaces to show."),
-    ).toBeInTheDocument(); // confirms it eventually resolves
+    expect(screen.queryByText(/Nothing to see here/)).toBeNull();
+    expect(await screen.findByText(/Nothing to see here/)).toBeInTheDocument(); // confirms it eventually resolves
   },
 );

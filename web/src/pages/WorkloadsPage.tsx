@@ -1,9 +1,11 @@
 import { getRouteApi, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import EventsFeed from "../components/EventsFeed";
 import { apiFetch } from "../api/client";
-import InfoMessage from "../components/InfoMessage";
+import EventsFeed from "../components/EventsFeed";
+import Notice from "../components/Notice";
+import LastUpdateTime from "../components/LastUpdateTime";
+import QueryStatus from "../components/QueryStatus";
 
 const routeApi = getRouteApi("/namespaces/$ns");
 
@@ -18,21 +20,37 @@ interface Pod {
 export default function WorkloadsPage() {
   const { ns } = routeApi.useParams();
   const url = `/api/v1/namespaces/${ns}/pods`;
-  const { data, isLoading, isError, error } = useQuery({
+  const {
+    data,
+    dataUpdatedAt,
+    isLoading,
+    isLoadingError,
+    isRefetchError,
+    error,
+  } = useQuery({
     queryKey: ["pods", ns],
     queryFn: () => apiFetch<Pod[]>(url, (r) => r.json()),
   });
+
   const [searchTerm, setSearchTerm] = useState("");
-  const filteredData = useMemo(() => {
-    return data?.filter((pod) => pod.name.includes(searchTerm));
-  }, [searchTerm, data]);
+  const filteredData = useMemo(
+    () => data?.filter((pod) => pod.name.includes(searchTerm)),
+    [searchTerm, data],
+  );
 
   return (
     <>
       <Link to="/">← Namespaces</Link>
       <h2>{ns}</h2>
-      {isLoading && <>Loading...</>}
-      {isError && <>Error: {error.message}</>}
+      <LastUpdateTime timestamp={dataUpdatedAt} />
+
+      <QueryStatus
+        isLoading={isLoading}
+        isLoadingError={isLoadingError}
+        isRefetchError={isRefetchError}
+        error={error}
+      />
+
       {filteredData && (
         <>
           <input
@@ -56,7 +74,7 @@ export default function WorkloadsPage() {
               ))}
             </ul>
           ) : (
-            <InfoMessage>No workloads to show.</InfoMessage>
+            <Notice type="info">Nothing to see here.</Notice>
           )}
           <EventsFeed namespace={ns} />
         </>

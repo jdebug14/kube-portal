@@ -1,5 +1,3 @@
-import InfoMessage from "./InfoMessage";
-
 export default function KeyValueList({
   title,
   entries,
@@ -7,20 +5,17 @@ export default function KeyValueList({
   title: string;
   entries: [string, string][];
 }) {
+  if (entries.length < 1) return null;
   return (
     <>
       <strong>{title}:</strong>
-      {entries.length > 0 ? (
-        <ul>
-          {entries.map(([key, value]) => (
-            <li key={key}>
-              {key}: {value}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <InfoMessage>None</InfoMessage>
-      )}
+      <ul>
+        {entries.map(([key, value]) => (
+          <li key={key}>
+            {key}: {value}
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

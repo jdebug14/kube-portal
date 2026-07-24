@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "../api/client";
 import OptionSelect from "./OptionSelect";
-import InfoMessage from "./InfoMessage";
+import Notice from "./Notice";
+import LastUpdateTime from "./LastUpdateTime";
+import QueryStatus from "./QueryStatus";
 
 interface LogViewerProps {
   namespace: string;
@@ -22,7 +24,14 @@ export default function PodLogsViewer({
     `/api/v1/namespaces/${namespace}/pods/${podName}/logs` +
     `?tailLines=${tailLines}` +
     (container ? `&container=${container}` : "");
-  const { data, isLoading, isFetching, isError, error } = useQuery({
+  const {
+    data,
+    dataUpdatedAt,
+    isLoading,
+    isLoadingError,
+    isRefetchError,
+    error,
+  } = useQuery({
     queryKey: ["podLogs", podName, namespace, tailLines, container],
     queryFn: () => apiFetch(url, (r) => r.text()),
     refetchInterval: refetchIntervalSeconds * 1000,
@@ -31,6 +40,7 @@ export default function PodLogsViewer({
   return (
     <>
       <h2>Logs</h2>
+      <LastUpdateTime timestamp={dataUpdatedAt} />
       <OptionSelect
         label="Container: "
         kind="string"
@@ -63,16 +73,20 @@ export default function PodLogsViewer({
           ["5 min", 300],
         ]}
       />
-      {isLoading && <>Loading...</>}
-      {isFetching && !isLoading && <>Refreshing...</>}
-      {isError && <>Error: {error.message}</>}
-      {data ? (
-        <pre>{data}</pre>
-      ) : (
-        <InfoMessage>
-          No logs to show. The container may still be waiting to start.
-        </InfoMessage>
-      )}
+      <QueryStatus
+        isLoading={isLoading}
+        isLoadingError={isLoadingError}
+        isRefetchError={isRefetchError}
+        error={error}
+      />
+      {data !== undefined &&
+        (data.length > 0 ? (
+          <pre>{data}</pre>
+        ) : (
+          <Notice type="info">
+            Nothing to see here. The container may still be waiting to start.
+          </Notice>
+        ))}
     </>
   );
 }

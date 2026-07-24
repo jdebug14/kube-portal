@@ -1,9 +1,11 @@
 import { getRouteApi, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "../api/client";
 import KeyValueList from "../components/KeyValueList";
 import EventsFeed from "../components/EventsFeed";
 import PodLogsViewer from "../components/PodLogsViewer";
-import { apiFetch } from "../api/client";
+import LastUpdateTime from "../components/LastUpdateTime";
+import QueryStatus from "../components/QueryStatus";
 
 const routeApi = getRouteApi("/namespaces/$ns/pods/$pn");
 
@@ -30,24 +32,37 @@ interface PodDetails {
 export default function PodDetailsPage() {
   const { ns, pn } = routeApi.useParams();
   const url = `/api/v1/namespaces/${ns}/pods/${pn}`;
-  const { data, isLoading, isError, error } = useQuery({
+  const {
+    data,
+    dataUpdatedAt,
+    isLoading,
+    isLoadingError,
+    isRefetchError,
+    error,
+  } = useQuery({
     queryKey: ["podDetails", ns, pn],
     queryFn: () => apiFetch<PodDetails>(url, (r) => r.json()),
   });
 
   const annotationEntries = data ? Object.entries(data.annotations ?? {}) : [];
   const labelEntries = data ? Object.entries(data.labels ?? {}) : [];
-
   return (
     <>
       <Link to="/namespaces/$ns" params={{ ns }}>
         ← {ns}/Pods
       </Link>
-      {isLoading && <p>Loading...</p>}
-      {isError && <p>Error: {error.message}</p>}
+      <h2>{pn}</h2>
+      <LastUpdateTime timestamp={dataUpdatedAt} />
+
+      <QueryStatus
+        isLoading={isLoading}
+        isLoadingError={isLoadingError}
+        isRefetchError={isRefetchError}
+        error={error}
+      />
+
       {data && (
         <>
-          <h2>{pn}</h2>
           <p>
             <strong>Status:</strong> {data.phase}
           </p>

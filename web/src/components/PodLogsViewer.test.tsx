@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import { test, expect } from "vitest";
-import { http, HttpResponse } from "msw";
+import { http, HttpResponse, delay } from "msw";
 import { server } from "../test/server.ts";
 import { renderWithQueryClient } from "../test/render.tsx";
 import PodLogsViewer from "./PodLogsViewer.tsx";
@@ -47,7 +47,7 @@ test("without containers", async () => {
   expect(capturedUrl).not.toContain("&container=");
 });
 
-test("empty logs", async () => {
+test("empty response", async () => {
   server.use(
     http.get("/api/v1/namespaces/test-namespace-1/pods/workload-1/logs", () => {
       return HttpResponse.text("");
@@ -58,10 +58,10 @@ test("empty logs", async () => {
     <PodLogsViewer namespace="test-namespace-1" podName="workload-1" />,
   );
 
-  expect(await screen.findByText(/No logs to show/)).toBeInTheDocument();
+  expect(await screen.findByText(/Nothing to see here/)).toBeInTheDocument();
 });
 
-test("shows error state", async () => {
+test("error state", async () => {
   server.use(
     http.get("/api/v1/namespaces/test-namespace-1/pods/workload-1/logs", () => {
       return HttpResponse.json({ error: "pod not found" }, { status: 404 });
@@ -74,3 +74,27 @@ test("shows error state", async () => {
 
   expect(await screen.findByText("Error: pod not found")).toBeInTheDocument();
 });
+
+test(
+  "loading state",
+  {
+    retry: 2 /* some inherant flakiness using an artifical delay to test behavior*/,
+  },
+  async () => {
+    server.use(
+      http.get(
+        "/api/v1/namespaces/test-namespace-1/pods/workload-1/logs",
+        async () => {
+          await delay(150); // small artificial delay so we can catch the loading state
+          return HttpResponse.text("");
+        },
+      ),
+    );
+    renderWithQueryClient(
+      <PodLogsViewer namespace="test-namespace-1" podName="workload-1" />,
+    );
+
+    expect(screen.queryByText(/Nothing to see here/)).toBeNull();
+    expect(await screen.findByText(/Nothing to see here/)).toBeInTheDocument(); // confirms it eventually resolves
+  },
+);

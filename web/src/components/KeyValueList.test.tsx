@@ -18,8 +18,8 @@ test("happy path", () => {
 });
 
 test("empty", () => {
-  render(<KeyValueList title="Labels" entries={[]}></KeyValueList>);
-
-  expect(screen.getByText("Labels:")).toBeInTheDocument();
-  expect(screen.getByText("None")).toBeInTheDocument();
+  const { container } = render(
+    <KeyValueList title="Labels" entries={[]}></KeyValueList>,
+  );
+  expect(container).toBeEmptyDOMElement();
 });

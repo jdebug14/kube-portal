@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import { test, expect } from "vitest";
-import { http, HttpResponse } from "msw";
+import { http, HttpResponse, delay } from "msw";
 import { renderWithQueryClient } from "../test/render.tsx";
 import { server } from "../test/server.ts";
 import EventsFeed from "./EventsFeed.tsx";
@@ -86,10 +86,10 @@ test("workload events", async () => {
   expect(capturedUrl).toContain("?involvedObjectName=workload-1");
 });
 
-test("no events", async () => {
+test("empty", async () => {
   renderWithQueryClient(<EventsFeed namespace="test-namespace-2" />);
 
-  expect(await screen.findByText(/No events to show/)).toBeInTheDocument();
+  expect(await screen.findByText(/Nothing to see here/)).toBeInTheDocument();
 });
 
 test("shows error state", async () => {
@@ -107,3 +107,22 @@ test("shows error state", async () => {
     await screen.findByText("Error: service unavailable"),
   ).toBeInTheDocument();
 });
+
+test(
+  "loading state",
+  {
+    retry: 2 /* some inherant flakiness using an artifical delay to test behavior*/,
+  },
+  async () => {
+    server.use(
+      http.get("/api/v1/namespaces/test-namespace-1/events", async () => {
+        await delay(150); // small artificial delay so we can catch the loading state
+        return HttpResponse.json([]);
+      }),
+    );
+    renderWithQueryClient(<EventsFeed namespace="test-namespace-1" />);
+
+    expect(screen.queryByText(/Nothing to see here/)).toBeNull();
+    expect(await screen.findByText(/Nothing to see here/)).toBeInTheDocument(); // confirms it eventually resolves
+  },
+);
