@@ -1,16 +1,13 @@
 name: Unit Tests
 on:
   push:
-    branches:
-      - master
 jobs:
-  web-test:
+  web-tests:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '24.16'
           cache: 'npm'
@@ -18,6 +15,24 @@ jobs:
       - name: Install dependencies
         working-directory: web
         run: npm ci
-      - name: Run unit Tests
+      - name: Run tests
         working-directory: web
         run: npm test
+  api-tests:
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v4
+        - name: Setup Go
+          uses: actions/setup-go@v7
+          with:
+            go-version: '1.26.x'
+        - name: Install dependencies
+          working-directory: api
+          run: go mod download
+        - name: Build
+          working-directory: api
+          run: go build -v ./...
+        - name: Run tests
+          working-directory: api
+          run: go test -v ./...
+
