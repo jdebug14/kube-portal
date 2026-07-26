@@ -6,8 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Setup Node
-        uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '24.16'
           cache: 'npm'
@@ -22,10 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
         - uses: actions/checkout@v7
-        - name: Setup Go
-          uses: actions/setup-go@v7
+        - uses: actions/setup-go@v7
           with:
             go-version: '1.26.x'
+            cache-dependency-path: api
         - name: Install dependencies
           working-directory: api
           run: go mod download
@@ -33,6 +32,7 @@ jobs:
           working-directory: api
           run: go build -v ./...
         - name: Run tests
-          working-directory: api
-          run: go test -v ./...
+          uses: robherley/go-test-action@v1
+          with:
+            moduleDirectory: api
 
