@@ -5,10 +5,13 @@ GET http://localhost:8080/healthz
 GET http://localhost:8080/api/v1/namespaces
 
 ### List Deployments
-GET http://localhost:8080/api/v1/namespaces/kube-system/deployments
+GET http://localhost:8080/api/v1/namespaces/default/deployments
+
+### Get Deployment Details
+GET http://localhost:8080/api/v1/namespaces/default/deployments/hello-world
 
 ### List Pods
-GET http://localhost:8080/api/v1/namespaces/kube-system/pods
+GET http://localhost:8080/api/v1/namespaces/default/pods
 
 ### Get Pod Details
 GET http://localhost:8080/api/v1/namespaces/kube-system/pods/kube-scheduler-minikube

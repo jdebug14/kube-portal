@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"fmt"
+	"log/slog"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -10,9 +11,10 @@ import (
 
 type Client struct {
 	clientset kubernetes.Interface
+	logger    *slog.Logger
 }
 
-func NewClient() (*Client, error) {
+func NewClient(logger *slog.Logger) (*Client, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
@@ -29,9 +31,9 @@ func NewClient() (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create kubernetes client: %w", err)
 	}
-	return NewClientFromInterface(cs), nil
+	return NewClientFromInterface(cs, logger), nil
 }
 
-func NewClientFromInterface(cs kubernetes.Interface) *Client {
-	return &Client{clientset: cs}
+func NewClientFromInterface(cs kubernetes.Interface, logger *slog.Logger) *Client {
+	return &Client{clientset: cs, logger: logger}
 }

@@ -14,7 +14,7 @@ import (
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	kubeclient, err := k8s.NewClient()
+	kubeclient, err := k8s.NewClient(logger)
 	if err != nil {
 		logger.Error("failed to create kubernetes client", "error", err)
 		os.Exit(1)
@@ -34,10 +34,11 @@ func main() {
 	})
 	router.Get("/api/v1/namespaces", handler.ListNamespaces)
 	router.Get("/api/v1/namespaces/{ns}/deployments", handler.ListDeployments)
+	router.Get("/api/v1/namespaces/{ns}/deployments/{name}", handler.GetDeploymentDetails)
 	router.Get("/api/v1/namespaces/{ns}/pods", handler.ListPods)
-	router.Get("/api/v1/namespaces/{ns}/pods/{pn}", handler.GetPodDetail)
+	router.Get("/api/v1/namespaces/{ns}/pods/{name}", handler.GetPodDetails)
 	router.Get("/api/v1/namespaces/{ns}/events", handler.ListEvents)
-	router.Get("/api/v1/namespaces/{ns}/pods/{pn}/logs", handler.GetPodLogs)
+	router.Get("/api/v1/namespaces/{ns}/pods/{name}/logs", handler.GetPodLogs)
 
 	logger.Info("server starting", "port", port)
 	if err := http.ListenAndServe(":"+port, router); err != nil {

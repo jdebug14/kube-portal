@@ -30,17 +30,18 @@ func (h *Handler) ListPods(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) GetPodDetail(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetPodDetails(w http.ResponseWriter, r *http.Request) {
 	namespace := chi.URLParam(r, "ns")
 	if err := validateNamespaceName(namespace); err != nil {
 		h.writeError(w, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
 		return
 	}
-	podName := chi.URLParam(r, "pn")
+	podName := chi.URLParam(r, "name")
 	if err := validateResourceName(podName); err != nil {
 		h.writeError(w, http.StatusBadRequest, "invalid pod: "+err.Error(), err)
 		return
 	}
+
 	podDetails, err := h.client.GetPodDetails(
 		r.Context(),
 		namespace,
@@ -51,9 +52,10 @@ func (h *Handler) GetPodDetail(w http.ResponseWriter, r *http.Request) {
 			h.writeError(w, http.StatusNotFound, "pod not found", err)
 			return
 		}
-		h.writeError(w, http.StatusInternalServerError, "failed to retrieve pod details", err)
+		h.writeError(w, http.StatusInternalServerError, "failed to get pod details", err)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(podDetails); err != nil {
 		h.logger.Error("failed to encode response", "error", err)

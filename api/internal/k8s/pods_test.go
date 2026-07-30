@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestMapContainers_HappyPath(t *testing.T) {
+func Test_mapContainers_HappyPath(t *testing.T) {
 	// arrange
 	name1 := "app1"
 	now := metav1.Now().Time
@@ -48,7 +48,7 @@ func TestMapContainers_HappyPath(t *testing.T) {
 	}
 }
 
-func TestMapContainers_NeverTerminated(t *testing.T) {
+func Test_mapContainers_NeverTerminated(t *testing.T) {
 	// arrange
 	name1 := "app1"
 	app1 := v1.Container{
@@ -77,7 +77,7 @@ func TestMapContainers_NeverTerminated(t *testing.T) {
 	}
 }
 
-func TestMapContainers_MultipleContainers(t *testing.T) {
+func Test_mapContainers_MultipleContainers(t *testing.T) {
 	// arrange
 	now := metav1.Now().Time
 	name1 := "app1"
@@ -142,7 +142,7 @@ func TestMapContainers_MultipleContainers(t *testing.T) {
 	}
 }
 
-func TestMapContainers_Empty(t *testing.T) {
+func Test_mapContainers_Empty(t *testing.T) {
 	// arrange
 
 	// act
@@ -154,7 +154,7 @@ func TestMapContainers_Empty(t *testing.T) {
 	}
 }
 
-func TestMapContainers_EmptyContainers(t *testing.T) {
+func Test_mapContainers_EmptyContainers(t *testing.T) {
 	// arrange
 	containerStatus1 := v1.ContainerStatus{
 		Name:         "app1",
@@ -180,7 +180,7 @@ func TestMapContainers_EmptyContainers(t *testing.T) {
 	}
 }
 
-func TestMapContainers_EmptyContainerStatuses(t *testing.T) {
+func Test_mapContainers_EmptyContainerStatuses(t *testing.T) {
 	// arrange
 	name1 := "app1"
 	app1 := v1.Container{
@@ -204,7 +204,7 @@ func TestMapContainers_EmptyContainerStatuses(t *testing.T) {
 	}
 }
 
-func TestMapContainers_NonMatchingContainerStatus(t *testing.T) {
+func Test_mapContainers_NonMatchingContainerStatus(t *testing.T) {
 	// arrange
 	now := time.Now()
 	name1 := "app1"
