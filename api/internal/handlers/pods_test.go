@@ -19,13 +19,6 @@ import (
 func TestListPods_HappyPath(t *testing.T) {
 	// arrange
 	now := metav1.Now()
-	coredns := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace:         "kube-system",
-			Name:              "coredns",
-			CreationTimestamp: now,
-		},
-	}
 	pod1 := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:         "default",
@@ -39,7 +32,14 @@ func TestListPods_HappyPath(t *testing.T) {
 			Phase: "Running",
 		},
 	}
-	h, _ := setupHandler(t, coredns, pod1)
+	otherPod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:         "kube-system",
+			Name:              "coredns",
+			CreationTimestamp: now,
+		},
+	}
+	h, _ := setupHandler(t, pod1, otherPod)
 	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{"ns": "default"})
 	w := httptest.NewRecorder()
 

@@ -17,7 +17,7 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 )
 
-func TestGetEvents_HappyPath(t *testing.T) {
+func TestListEvents_HappyPath(t *testing.T) {
 	now := time.Now()
 	hourAgo := now.Add(-10 * time.Minute)
 	event1 := &corev1.Event{
@@ -119,7 +119,7 @@ func TestGetEvents_HappyPath(t *testing.T) {
 	assert.True(t, now.Equal(events[1].LastTime))
 }
 
-func TestGetEvents_WithFilter(t *testing.T) {
+func TestListEvents_WithFilter(t *testing.T) {
 	h, fakeCS := setupHandler(t)
 	var capturedFieldSelector string
 	fakeCS.PrependReactor("list", "events", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -146,7 +146,7 @@ func TestGetEvents_WithFilter(t *testing.T) {
 	assert.Equal(t, `involvedObject.name=pod2`, capturedFieldSelector)
 }
 
-func TestGetEvents_None(t *testing.T) {
+func TestListEvents_None(t *testing.T) {
 	now := time.Now()
 	hourAgo := now.Add(-10 * time.Minute)
 	event1 := &corev1.Event{
@@ -202,7 +202,7 @@ func TestGetEvents_None(t *testing.T) {
 	assert.Equal(t, 0, len(events))
 }
 
-func TestGetEvents_BadRequest_namespace(t *testing.T) {
+func TestListEvents_BadRequest_namespace(t *testing.T) {
 	// arrange
 	h, _ := setupHandler(t)
 	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{"ns": "Invalidnamepace"})
@@ -224,7 +224,7 @@ func TestGetEvents_BadRequest_namespace(t *testing.T) {
 	assert.Contains(t, errorResponse.Message, "invalid namespace")
 }
 
-func TestGetEvents_BadRequest_Filter(t *testing.T) {
+func TestListEvents_BadRequest_Filter(t *testing.T) {
 	// arrange
 	h, _ := setupHandler(t)
 	r := newRequestWithParams(t, http.MethodGet, "/some/test/request?involvedObjectName=Invalidpodname", map[string]string{"ns": "default"})
@@ -246,7 +246,7 @@ func TestGetEvents_BadRequest_Filter(t *testing.T) {
 	assert.Contains(t, errorResponse.Message, "invalid object filter")
 }
 
-func TestGetEvents_Error(t *testing.T) {
+func TestListEvents_Error(t *testing.T) {
 	// arrange
 	h, fakeCS := setupHandler(t)
 	fakeCS.PrependReactor("list", "events", func(action k8stesting.Action) (bool, runtime.Object, error) {

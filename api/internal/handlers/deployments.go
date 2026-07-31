@@ -11,7 +11,7 @@ import (
 func (h *Handler) ListDeployments(w http.ResponseWriter, r *http.Request) {
 	namespace := chi.URLParam(r, "ns")
 	if err := validateNamespaceName(namespace); err != nil {
-		h.writeError(w, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
+		h.writeError(w, r.RequestURI, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
 		return
 	}
 
@@ -20,7 +20,7 @@ func (h *Handler) ListDeployments(w http.ResponseWriter, r *http.Request) {
 		namespace,
 	)
 	if err != nil {
-		h.writeError(w, http.StatusInternalServerError, "failed to retrieve deployments", err)
+		h.writeError(w, r.RequestURI, http.StatusInternalServerError, "failed to retrieve deployments", err)
 		return
 	}
 
@@ -33,22 +33,22 @@ func (h *Handler) ListDeployments(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetDeploymentDetails(w http.ResponseWriter, r *http.Request) {
 	namespace := chi.URLParam(r, "ns")
 	if err := validateNamespaceName(namespace); err != nil {
-		h.writeError(w, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
+		h.writeError(w, r.RequestURI, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
 		return
 	}
 	deploymentName := chi.URLParam(r, "name")
 	if err := validateResourceName(deploymentName); err != nil {
-		h.writeError(w, http.StatusBadRequest, "invalid deployment: "+err.Error(), err)
+		h.writeError(w, r.RequestURI, http.StatusBadRequest, "invalid deployment: "+err.Error(), err)
 		return
 	}
 
 	deploymentDetails, err := h.client.GetDeploymentDetails(r.Context(), namespace, deploymentName)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			h.writeError(w, http.StatusNotFound, "deployment not found", err)
+			h.writeError(w, r.RequestURI, http.StatusNotFound, "deployment not found", err)
 			return
 		}
-		h.writeError(w, http.StatusInternalServerError, "failed to retrieve deployment details", err)
+		h.writeError(w, r.RequestURI, http.StatusInternalServerError, "failed to retrieve deployment details", err)
 		return
 	}
 

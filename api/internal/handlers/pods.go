@@ -11,7 +11,7 @@ import (
 func (h *Handler) ListPods(w http.ResponseWriter, r *http.Request) {
 	namespace := chi.URLParam(r, "ns")
 	if err := validateNamespaceName(namespace); err != nil {
-		h.writeError(w, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
+		h.writeError(w, r.RequestURI, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
 		return
 	}
 
@@ -20,7 +20,7 @@ func (h *Handler) ListPods(w http.ResponseWriter, r *http.Request) {
 		namespace,
 	)
 	if err != nil {
-		h.writeError(w, http.StatusInternalServerError, "failed to fetch pods", err)
+		h.writeError(w, r.RequestURI, http.StatusInternalServerError, "failed to fetch pods", err)
 		return
 	}
 
@@ -33,12 +33,12 @@ func (h *Handler) ListPods(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetPodDetails(w http.ResponseWriter, r *http.Request) {
 	namespace := chi.URLParam(r, "ns")
 	if err := validateNamespaceName(namespace); err != nil {
-		h.writeError(w, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
+		h.writeError(w, r.RequestURI, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
 		return
 	}
 	podName := chi.URLParam(r, "name")
 	if err := validateResourceName(podName); err != nil {
-		h.writeError(w, http.StatusBadRequest, "invalid pod: "+err.Error(), err)
+		h.writeError(w, r.RequestURI, http.StatusBadRequest, "invalid pod: "+err.Error(), err)
 		return
 	}
 
@@ -49,10 +49,10 @@ func (h *Handler) GetPodDetails(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			h.writeError(w, http.StatusNotFound, "pod not found", err)
+			h.writeError(w, r.RequestURI, http.StatusNotFound, "pod not found", err)
 			return
 		}
-		h.writeError(w, http.StatusInternalServerError, "failed to get pod details", err)
+		h.writeError(w, r.RequestURI, http.StatusInternalServerError, "failed to get pod details", err)
 		return
 	}
 

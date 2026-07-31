@@ -10,13 +10,13 @@ import (
 func (h *Handler) ListEvents(w http.ResponseWriter, r *http.Request) {
 	namespace := chi.URLParam(r, "ns")
 	if err := validateNamespaceName(namespace); err != nil {
-		h.writeError(w, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
+		h.writeError(w, r.RequestURI, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
 		return
 	}
 	involvedObject := r.URL.Query().Get("involvedObjectName")
 	if involvedObject != "" {
 		if err := validateResourceName(involvedObject); err != nil {
-			h.writeError(w, http.StatusBadRequest, "invalid object filter: "+err.Error(), err)
+			h.writeError(w, r.RequestURI, http.StatusBadRequest, "invalid object filter: "+err.Error(), err)
 			return
 		}
 	}
@@ -27,7 +27,7 @@ func (h *Handler) ListEvents(w http.ResponseWriter, r *http.Request) {
 		involvedObject,
 	)
 	if err != nil {
-		h.writeError(w, http.StatusInternalServerError, "failed to fetch events", err)
+		h.writeError(w, r.RequestURI, http.StatusInternalServerError, "failed to fetch events", err)
 		return
 	}
 

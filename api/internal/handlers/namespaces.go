@@ -8,7 +8,7 @@ import (
 func (h *Handler) ListNamespaces(w http.ResponseWriter, r *http.Request) {
 	namespaces, err := h.client.ListNamespaces(r.Context())
 	if err != nil {
-		h.writeError(w, http.StatusInternalServerError, "failed to fetch namespaces", err)
+		h.writeError(w, r.RequestURI, http.StatusInternalServerError, "failed to fetch namespaces", err)
 		return
 	}
 

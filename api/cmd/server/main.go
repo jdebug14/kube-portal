@@ -1,12 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"log/slog"
 	"net/http"
 	"os"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/jdebug14/kube-portal/internal/handlers"
 	"github.com/jdebug14/kube-portal/internal/k8s"
 )
@@ -25,20 +23,8 @@ func main() {
 		port = "8080"
 	}
 
-	router := chi.NewRouter()
 	handler := handlers.NewHandler(kubeclient, logger)
-
-	router.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-	})
-	router.Get("/api/v1/namespaces", handler.ListNamespaces)
-	router.Get("/api/v1/namespaces/{ns}/deployments", handler.ListDeployments)
-	router.Get("/api/v1/namespaces/{ns}/deployments/{name}", handler.GetDeploymentDetails)
-	router.Get("/api/v1/namespaces/{ns}/pods", handler.ListPods)
-	router.Get("/api/v1/namespaces/{ns}/pods/{name}", handler.GetPodDetails)
-	router.Get("/api/v1/namespaces/{ns}/events", handler.ListEvents)
-	router.Get("/api/v1/namespaces/{ns}/pods/{name}/logs", handler.GetPodLogs)
+	router := handlers.NewRouter(handler)
 
 	logger.Info("server starting", "port", port)
 	if err := http.ListenAndServe(":"+port, router); err != nil {

@@ -12,22 +12,24 @@ import (
 func (h *Handler) GetPodLogs(w http.ResponseWriter, r *http.Request) {
 	namespace := chi.URLParam(r, "ns")
 	if err := validateNamespaceName(namespace); err != nil {
-		h.writeError(w, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
+		h.writeError(w, r.RequestURI, http.StatusBadRequest, "invalid namespace: "+err.Error(), err)
 		return
 	}
-	podName := chi.URLParam(r, "pn")
+	podName := chi.URLParam(r, "name")
 	if err := validateResourceName(podName); err != nil {
-		h.writeError(w, http.StatusBadRequest, "invalid pod: "+err.Error(), err)
+		h.writeError(w, r.RequestURI, http.StatusBadRequest, "invalid pod: "+err.Error(), err)
 		return
 	}
 	container := r.URL.Query().Get("container")
-	if err := validateResourceName(container); err != nil {
-		h.writeError(w, http.StatusBadRequest, "invalid container: "+err.Error(), err)
-		return
+	if container != "" {
+		if err := validateResourceName(container); err != nil {
+			h.writeError(w, r.RequestURI, http.StatusBadRequest, "invalid container name: "+err.Error(), err)
+			return
+		}
 	}
 	tailLines, err := parseTailLines(r.URL.Query().Get("tailLines"))
 	if err != nil {
-		h.writeError(w, http.StatusBadRequest, "tailLines must be a positive integer", err)
+		h.writeError(w, r.RequestURI, http.StatusBadRequest, "tailLines must be a positive integer", err)
 		return
 	}
 
@@ -40,10 +42,10 @@ func (h *Handler) GetPodLogs(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			h.writeError(w, http.StatusNotFound, "pod not found", err)
+			h.writeError(w, r.RequestURI, http.StatusNotFound, "pod not found", err)
 			return
 		}
-		h.writeError(w, http.StatusInternalServerError, "failed to retrieve pod logs", err)
+		h.writeError(w, r.RequestURI, http.StatusInternalServerError, "failed to retrieve pod logs", err)
 		return
 	}
 
