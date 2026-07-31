@@ -1,13 +1,11 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 
@@ -33,16 +31,29 @@ func setupRouter(t *testing.T, objects ...runtime.Object) *chi.Mux {
 	return NewRouter(h)
 }
 
-type mockResponseWrapper struct {
-	data string
-}
+func TestIntegration_HealthCheck(t *testing.T) {
+	// arrange
+	router := setupRouter(t)
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 
-func (m *mockResponseWrapper) DoRaw(ctx context.Context) ([]byte, error) {
-	return []byte(m.data), nil
-}
+	// act
+	router.ServeHTTP(w, r)
 
-func (m *mockResponseWrapper) Stream(ctx context.Context) (io.ReadCloser, error) {
-	return io.NopCloser(strings.NewReader(m.data)), nil
+	//assert
+	result := w.Result()
+	assert.Equal(t, http.StatusOK, result.StatusCode)
+	if assert.NotNil(t, result.Body) {
+		body, err := io.ReadAll(result.Body)
+		if assert.NoError(t, err) {
+			var health map[string]string
+			err = json.Unmarshal(body, &health)
+			if assert.NoError(t, err) {
+				assert.Equal(t, 1, len(health))
+				assert.Equal(t, "ok", health["status"])
+			}
+		}
+	}
 }
 
 func TestIntegration_ListNamespaces(t *testing.T) {
