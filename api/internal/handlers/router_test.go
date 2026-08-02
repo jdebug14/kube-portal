@@ -31,7 +31,7 @@ func setupRouter(t *testing.T, objects ...runtime.Object) *chi.Mux {
 	return NewRouter(h)
 }
 
-func TestIntegration_HealthCheck(t *testing.T) {
+func TestRouter_HealthCheck(t *testing.T) {
 	// arrange
 	router := setupRouter(t)
 	w := httptest.NewRecorder()
@@ -56,7 +56,7 @@ func TestIntegration_HealthCheck(t *testing.T) {
 	}
 }
 
-func TestIntegration_ListNamespaces(t *testing.T) {
+func TestRouter_ListNamespaces(t *testing.T) {
 	// arrange
 	now := metav1.Now()
 	defaultNamespace := &corev1.Namespace{
@@ -91,7 +91,7 @@ func TestIntegration_ListNamespaces(t *testing.T) {
 	}
 }
 
-func TestIntegration_ListDeployments(t *testing.T) {
+func TestRouter_ListDeployments(t *testing.T) {
 	// arrange
 	now := metav1.Now()
 	replicas := int32(3)
@@ -129,7 +129,7 @@ func TestIntegration_ListDeployments(t *testing.T) {
 	}
 }
 
-func TestIntegration_GetDeploymentDetails(t *testing.T) {
+func TestRouter_GetDeploymentDetails(t *testing.T) {
 	// arrange
 	now := metav1.Now()
 	five := int32(5)
@@ -249,7 +249,7 @@ func TestIntegration_GetDeploymentDetails(t *testing.T) {
 	}
 }
 
-func TestIntegration_ListPods(t *testing.T) {
+func TestRouter_ListPods(t *testing.T) {
 	// arrange
 	now := metav1.Now()
 	pod1 := &corev1.Pod{
@@ -288,7 +288,7 @@ func TestIntegration_ListPods(t *testing.T) {
 	}
 }
 
-func TestIntegration_GetPodDetails(t *testing.T) {
+func TestRouter_GetPodDetails(t *testing.T) {
 	// arrange
 	now := metav1.Now()
 	pod1 := &corev1.Pod{
@@ -326,7 +326,7 @@ func TestIntegration_GetPodDetails(t *testing.T) {
 	}
 }
 
-func TestIntegration_ListEvents(t *testing.T) {
+func TestRouter_ListEvents(t *testing.T) {
 	now := time.Now()
 	hourAgo := now.Add(-10 * time.Minute)
 	event1 := &corev1.Event{
@@ -385,7 +385,7 @@ func TestIntegration_ListEvents(t *testing.T) {
 	}
 }
 
-func TestIntegration_ListEvents_WithFilter(t *testing.T) {
+func TestRouter_ListEvents_WithFilter(t *testing.T) {
 	// arrange
 	fakeCS := fake.NewSimpleClientset()
 	var capturedFieldSelector string
@@ -408,7 +408,7 @@ func TestIntegration_ListEvents_WithFilter(t *testing.T) {
 	assert.Equal(t, "involvedObject.name=pod1", capturedFieldSelector)
 }
 
-func TestIntegration_GetLogs(t *testing.T) {
+func TestRouter_GetLogs(t *testing.T) {
 	// arrange
 	fakeCS := fake.NewSimpleClientset()
 	var capturedOpts *v1.PodLogOptions
@@ -445,7 +445,7 @@ func TestIntegration_GetLogs(t *testing.T) {
 	}
 }
 
-func TestIntegration_GetLogs_withContainer(t *testing.T) {
+func TestRouter_GetLogs_withContainer(t *testing.T) {
 	// arrange
 	containerName := "container1"
 	fakeCS := fake.NewSimpleClientset()
@@ -487,7 +487,7 @@ func TestIntegration_GetLogs_withContainer(t *testing.T) {
 	}
 }
 
-func TestIntegration_GetLogs_withTailLines(t *testing.T) {
+func TestRouter_GetLogs_withTailLines(t *testing.T) {
 	// arrange
 	fakeCS := fake.NewSimpleClientset()
 	var capturedOpts *v1.PodLogOptions
