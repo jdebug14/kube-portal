@@ -4,17 +4,17 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render } from "@testing-library/react";
+import { render, type RenderResult } from "@testing-library/react";
 import { routeTree } from "../router";
 import type { ReactElement } from "react";
 
-function createTestQueryClient() {
+function createTestQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
 }
 
-export function renderWithQueryClient(ui: ReactElement) {
+export function renderWithQueryClient(ui: ReactElement): RenderResult {
   return render(
     <QueryClientProvider client={createTestQueryClient()}>
       {ui}
@@ -22,7 +22,7 @@ export function renderWithQueryClient(ui: ReactElement) {
   );
 }
 
-export function renderWithRouter(path: string) {
+export function renderWithRouter(path: string): RenderResult {
   const history = createMemoryHistory({ initialEntries: [path] });
   const router = createRouter({ routeTree, history });
 

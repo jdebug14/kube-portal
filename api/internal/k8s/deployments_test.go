@@ -620,7 +620,7 @@ func Test_getRolloutStatus(t *testing.T) {
 					Message:            "ReplicaSet has successfully progressed",
 				},
 			},
-			expected: "Success",
+			expected: "Running",
 		},
 		{
 			caseName: "ReplicaFailure true always signals Failure",

@@ -39,7 +39,7 @@ export default function PodLogsViewer({
 
   return (
     <>
-      <h2>Logs</h2>
+      <h3>Logs</h3>
       <LastUpdateTime timestamp={dataUpdatedAt} />
       <OptionSelect
         label="Container: "

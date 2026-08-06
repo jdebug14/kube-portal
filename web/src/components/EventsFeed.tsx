@@ -48,7 +48,7 @@ export default function EventsFeed({
   });
   return (
     <>
-      <h2>Events</h2>
+      <h3>Events</h3>
       <LastUpdateTime timestamp={dataUpdatedAt} />
       <OptionSelect
         label="Refetch interval: "
@@ -73,17 +73,32 @@ export default function EventsFeed({
       {data && (
         <>
           {data.length > 0 ? (
-            <ul>
-              {data?.map((event) => (
-                <li
-                  key={`${event.involved_object.name}-${event.reason}-${event.first_time}`}
-                >
-                  type={event.type}, name={event.involved_object.name}, reason=
-                  {event.reason}, message={event.message}, count={event.count},
-                  lastseen={event.last_time}
-                </li>
-              ))}
-            </ul>
+            <table className="events">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Name</th>
+                  <th>Reason</th>
+                  <th>Message</th>
+                  <th>Count</th>
+                  <th>Last seen</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data?.map((event, i) => (
+                  <tr
+                    key={`${event.involved_object.name}-${event.reason}-${i}`}
+                  >
+                    <td>{event.type}</td>
+                    <td>{event.involved_object.name}</td>
+                    <td>{event.reason}</td>
+                    <td>{event.message}</td>
+                    <td>{event.count}</td>
+                    <td>{event.last_time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : (
             <Notice type="info">
               Nothing to see here. Events have a limited retention time.

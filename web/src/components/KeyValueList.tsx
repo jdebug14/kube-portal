@@ -1,18 +1,22 @@
 export default function KeyValueList({
-  title,
   entries,
+  variant = "badges",
 }: {
-  title: string;
   entries: [string, string][];
+  variant?: "badges" | "compact";
 }) {
-  if (entries.length < 1) return null;
+  if (entries.length < 1) return <></>;
   return (
     <>
-      <strong>{title}:</strong>
-      <ul>
+      <ul className={variant === "badges" ? "badge-list" : "compact-list"}>
         {entries.map(([key, value]) => (
-          <li key={key}>
-            {key}: {value}
+          <li
+            key={key}
+            className={
+              variant === "badges" ? "badge badge-grey" : "compact-item"
+            }
+          >
+            {key}={value}
           </li>
         ))}
       </ul>

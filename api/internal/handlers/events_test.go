@@ -88,7 +88,13 @@ func TestListEvents_HappyPath(t *testing.T) {
 			Namespace: "othernamespace",
 		},
 	}
-	h, _ := setupHandler(t, event1, event2, event3, event4)
+	h, fakeCS := setupHandler(t, event1, event2, event3, event4)
+	var capturedFieldSelector string
+	fakeCS.PrependReactor("list", "events", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		listAction := action.(k8stesting.ListAction)
+		capturedFieldSelector = listAction.GetListRestrictions().Fields.String()
+		return false, nil, nil
+	})
 	r := newRequestWithParams(t, http.MethodGet, "/some/test/request", map[string]string{"ns": "default"})
 	w := httptest.NewRecorder()
 
@@ -98,25 +104,29 @@ func TestListEvents_HappyPath(t *testing.T) {
 	// assert
 	result := w.Result()
 	assert.Equal(t, http.StatusOK, result.StatusCode)
-	assert.NotNil(t, result.Body)
-	body, err := io.ReadAll(result.Body)
-	assert.NoError(t, err)
-	var events []types.Event
-	err = json.Unmarshal(body, &events)
-	assert.NoError(t, err)
-	assert.Equal(t, 2, len(events))
-	assert.Equal(t, "Normal", events[1].Type)
-	assert.Equal(t, "Scheduled", events[0].Reason)
-	assert.Equal(t, "Successfully assigned default/pod1 to worker-1", events[0].Message)
-	assert.Equal(t, int32(1), events[0].Count)
-	assert.True(t, hourAgo.Equal(events[0].FirstTime))
-	assert.True(t, now.Equal(events[0].LastTime))
-	assert.Equal(t, "Normal", events[0].Type)
-	assert.Equal(t, "SuccessfulCreate", events[1].Reason)
-	assert.Equal(t, "Created pod: pod1", events[1].Message)
-	assert.Equal(t, int32(1), events[1].Count)
-	assert.True(t, hourAgo.Equal(events[1].FirstTime))
-	assert.True(t, now.Equal(events[1].LastTime))
+	if assert.NotNil(t, result.Body) {
+		body, err := io.ReadAll(result.Body)
+		if assert.NoError(t, err) {
+			var events []types.Event
+			err = json.Unmarshal(body, &events)
+			if assert.NoError(t, err) {
+				assert.Equal(t, `involvedObject.namespace=default`, capturedFieldSelector)
+				assert.Equal(t, 2, len(events))
+				assert.Equal(t, "Normal", events[1].Type)
+				assert.Equal(t, "Scheduled", events[0].Reason)
+				assert.Equal(t, "Successfully assigned default/pod1 to worker-1", events[0].Message)
+				assert.Equal(t, int32(1), events[0].Count)
+				assert.True(t, hourAgo.Equal(events[0].FirstTime))
+				assert.True(t, now.Equal(events[0].LastTime))
+				assert.Equal(t, "Normal", events[0].Type)
+				assert.Equal(t, "SuccessfulCreate", events[1].Reason)
+				assert.Equal(t, "Created pod: pod1", events[1].Message)
+				assert.Equal(t, int32(1), events[1].Count)
+				assert.True(t, hourAgo.Equal(events[1].FirstTime))
+				assert.True(t, now.Equal(events[1].LastTime))
+			}
+		}
+	}
 }
 
 func TestListEvents_WithFilter(t *testing.T) {
@@ -137,13 +147,16 @@ func TestListEvents_WithFilter(t *testing.T) {
 	// assert
 	result := w.Result()
 	assert.Equal(t, http.StatusOK, result.StatusCode)
-	assert.NotNil(t, result.Body)
-	body, err := io.ReadAll(result.Body)
-	assert.NoError(t, err)
-	var events []types.Event
-	err = json.Unmarshal(body, &events)
-	assert.NoError(t, err)
-	assert.Equal(t, `involvedObject.name=pod2`, capturedFieldSelector)
+	if assert.NotNil(t, result.Body) {
+		body, err := io.ReadAll(result.Body)
+		if assert.NoError(t, err) {
+			var events []types.Event
+			err = json.Unmarshal(body, &events)
+			if assert.NoError(t, err) {
+				assert.Equal(t, `involvedObject.name=pod2,involvedObject.namespace=default`, capturedFieldSelector)
+			}
+		}
+	}
 }
 
 func TestListEvents_None(t *testing.T) {
@@ -193,13 +206,16 @@ func TestListEvents_None(t *testing.T) {
 	// assert
 	result := w.Result()
 	assert.Equal(t, http.StatusOK, result.StatusCode)
-	assert.NotNil(t, result.Body)
-	body, err := io.ReadAll(result.Body)
-	assert.NoError(t, err)
-	var events []types.Event
-	err = json.Unmarshal(body, &events)
-	assert.NoError(t, err)
-	assert.Equal(t, 0, len(events))
+	if assert.NotNil(t, result.Body) {
+		body, err := io.ReadAll(result.Body)
+		if assert.NoError(t, err) {
+			var events []types.Event
+			err = json.Unmarshal(body, &events)
+			if assert.NoError(t, err) {
+				assert.Equal(t, 0, len(events))
+			}
+		}
+	}
 }
 
 func TestListEvents_BadRequest_namespace(t *testing.T) {
@@ -214,14 +230,17 @@ func TestListEvents_BadRequest_namespace(t *testing.T) {
 	// assert
 	result := w.Result()
 	assert.Equal(t, http.StatusBadRequest, result.StatusCode)
-	assert.NotNil(t, result.Body)
-	body, err := io.ReadAll(result.Body)
-	assert.NoError(t, err)
-	var errorResponse errorResponse
-	err = json.Unmarshal(body, &errorResponse)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusBadRequest, errorResponse.Code)
-	assert.Contains(t, errorResponse.Message, "invalid namespace")
+	if assert.NotNil(t, result.Body) {
+		body, err := io.ReadAll(result.Body)
+		if assert.NoError(t, err) {
+			var errorResponse errorResponse
+			err = json.Unmarshal(body, &errorResponse)
+			if assert.NoError(t, err) {
+				assert.Equal(t, http.StatusBadRequest, errorResponse.Code)
+				assert.Contains(t, errorResponse.Message, "invalid namespace")
+			}
+		}
+	}
 }
 
 func TestListEvents_BadRequest_Filter(t *testing.T) {
@@ -236,14 +255,17 @@ func TestListEvents_BadRequest_Filter(t *testing.T) {
 	// assert
 	result := w.Result()
 	assert.Equal(t, http.StatusBadRequest, result.StatusCode)
-	assert.NotNil(t, result.Body)
-	body, err := io.ReadAll(result.Body)
-	assert.NoError(t, err)
-	var errorResponse errorResponse
-	err = json.Unmarshal(body, &errorResponse)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusBadRequest, errorResponse.Code)
-	assert.Contains(t, errorResponse.Message, "invalid object filter")
+	if assert.NotNil(t, result.Body) {
+		body, err := io.ReadAll(result.Body)
+		if assert.NoError(t, err) {
+			var errorResponse errorResponse
+			err = json.Unmarshal(body, &errorResponse)
+			if assert.NoError(t, err) {
+				assert.Equal(t, http.StatusBadRequest, errorResponse.Code)
+				assert.Contains(t, errorResponse.Message, "invalid object filter")
+			}
+		}
+	}
 }
 
 func TestListEvents_Error(t *testing.T) {
@@ -261,12 +283,15 @@ func TestListEvents_Error(t *testing.T) {
 	// assert
 	result := w.Result()
 	assert.Equal(t, http.StatusInternalServerError, result.StatusCode)
-	assert.NotNil(t, result.Body)
-	body, err := io.ReadAll(result.Body)
-	assert.NoError(t, err)
-	var errorResponse errorResponse
-	err = json.Unmarshal(body, &errorResponse)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusInternalServerError, errorResponse.Code)
-	assert.Equal(t, "failed to fetch events", errorResponse.Message)
+	if assert.NotNil(t, result.Body) {
+		body, err := io.ReadAll(result.Body)
+		if assert.NoError(t, err) {
+			var errorResponse errorResponse
+			err = json.Unmarshal(body, &errorResponse)
+			if assert.NoError(t, err) {
+				assert.Equal(t, http.StatusInternalServerError, errorResponse.Code)
+				assert.Equal(t, "failed to fetch events", errorResponse.Message)
+			}
+		}
+	}
 }

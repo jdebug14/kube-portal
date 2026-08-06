@@ -10,13 +10,11 @@ import (
 )
 
 func (c *Client) ListEvents(ctx context.Context, namespace string, involvedObjectName string) ([]types.Event, error) {
-	var listOpts metav1.ListOptions
+	listOpts := metav1.ListOptions{
+		FieldSelector: "involvedObject.namespace=" + namespace,
+	}
 	if involvedObjectName != "" {
-		listOpts = metav1.ListOptions{
-			FieldSelector: "involvedObject.name=" + involvedObjectName,
-		}
-	} else {
-		listOpts = metav1.ListOptions{}
+		listOpts.FieldSelector = listOpts.FieldSelector + ",involvedObject.name=" + involvedObjectName
 	}
 	events, err := c.clientset.CoreV1().Events(namespace).List(ctx, listOpts)
 	if err != nil {

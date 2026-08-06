@@ -371,7 +371,7 @@ func TestGetDeploymentDetails_HappyPath(t *testing.T) {
 	if assert.NotNil(t, result.Body) {
 		body, err := io.ReadAll(result.Body)
 		assert.NoError(t, err)
-		var deploymentDetails types.DeploymentDetail
+		var deploymentDetails types.DeploymentDetails
 		err = json.Unmarshal(body, &deploymentDetails)
 
 		assert.NoError(t, err)
@@ -385,7 +385,7 @@ func TestGetDeploymentDetails_HappyPath(t *testing.T) {
 		assert.Equal(t, three, deploymentDetails.ReadyReplicas)
 		assert.Equal(t, two, deploymentDetails.AvailableReplicas)
 		assert.Equal(t, 2, len(deploymentDetails.Conditions))
-		assert.Equal(t, "Success", deploymentDetails.RolloutStatus)
+		assert.Equal(t, "Running", deploymentDetails.RolloutStatus)
 		assert.Equal(t, 2, len(deploymentDetails.Revisions))
 		assert.Equal(t, "replicaset2", deploymentDetails.Revisions[0].Name)
 		assert.True(t, deploymentDetails.Revisions[0].IsCurrent)

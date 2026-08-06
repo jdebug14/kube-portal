@@ -19,7 +19,7 @@ type Deployment struct {
 	CreatedAt         time.Time `json:"created_at"`
 }
 
-type DeploymentDetail struct {
+type DeploymentDetails struct {
 	Name              string                `json:"name"`
 	Namespace         string                `json:"namespace"`
 	Strategy          string                `json:"strategy"`
@@ -75,7 +75,7 @@ type Pod struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type PodDetail struct {
+type PodDetails struct {
 	Name        string            `json:"name"`
 	Namespace   string            `json:"namespace"`
 	Phase       string            `json:"phase"`

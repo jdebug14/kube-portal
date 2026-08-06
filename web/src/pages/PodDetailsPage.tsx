@@ -7,7 +7,7 @@ import PodLogsViewer from "../components/PodLogsViewer";
 import LastUpdateTime from "../components/LastUpdateTime";
 import QueryStatus from "../components/QueryStatus";
 
-const routeApi = getRouteApi("/namespaces/$ns/pods/$pn");
+const routeApi = getRouteApi("/namespaces/$ns/pods/$name");
 
 interface Container {
   name: string;
@@ -30,8 +30,8 @@ interface PodDetails {
 }
 
 export default function PodDetailsPage() {
-  const { ns, pn } = routeApi.useParams();
-  const url = `/api/v1/namespaces/${ns}/pods/${pn}`;
+  const { ns, name } = routeApi.useParams();
+  const url = `/api/v1/namespaces/${ns}/pods/${name}`;
   const {
     data,
     dataUpdatedAt,
@@ -40,7 +40,7 @@ export default function PodDetailsPage() {
     isRefetchError,
     error,
   } = useQuery({
-    queryKey: ["podDetails", ns, pn],
+    queryKey: ["podDetails", ns, name],
     queryFn: () => apiFetch<PodDetails>(url, (r) => r.json()),
   });
 
@@ -49,9 +49,9 @@ export default function PodDetailsPage() {
   return (
     <>
       <Link to="/namespaces/$ns" params={{ ns }}>
-        ← {ns}/Pods
+        ← namespaces/{ns}
       </Link>
-      <h2>{pn}</h2>
+      <h2>Pod: {name}</h2>
       <LastUpdateTime timestamp={dataUpdatedAt} />
 
       <QueryStatus
@@ -63,45 +63,79 @@ export default function PodDetailsPage() {
 
       {data && (
         <>
-          <p>
-            <strong>Status:</strong> {data.phase}
-          </p>
-          <p>
-            <strong>Host node:</strong> {data.host_node}
-          </p>
-          <p>
-            <strong>Created at:</strong> {data.created_at}
-          </p>
-          <KeyValueList title="Annotations" entries={annotationEntries} />
-          <KeyValueList title="Labels" entries={labelEntries} />
-          <>
-            <strong>Containers:</strong>
-            <ul>
-              {data.containers.map((container) => (
-                <li key={container.name}>
-                  Name: {container.name}
-                  <br />
-                  Image: {container.image}
-                  <br />
-                  Ready: {String(container.ready)}
-                  <br />
-                  Restarts: {container.restarts}
-                  <br />
+          <h3>Properties</h3>
+          <table className="resource-properties">
+            <tbody>
+              <tr>
+                <td>Status</td>
+                <td>{data.phase}</td>
+              </tr>
+              <tr>
+                <td>Namespace</td>
+                <td>{data.namespace}</td>
+              </tr>
+              <tr>
+                <td>Node</td>
+                <td>{data.host_node}</td>
+              </tr>
+              <tr>
+                <td>Created</td>
+                <td>{new Date(data.created_at).toLocaleString()}</td>
+              </tr>
+              <tr hidden={annotationEntries.length < 1}>
+                <td>Annotations</td>
+                <td>
+                  <KeyValueList entries={annotationEntries} />
+                </td>
+              </tr>
+              <tr hidden={labelEntries.length < 1}>
+                <td>Labels</td>
+                <td>
+                  <KeyValueList entries={labelEntries} />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Containers</h3>
+          {data.containers.map((container) => (
+            <div key={container.name}>
+              <h4>{container.name}</h4>
+              <table className="resource-properties">
+                <tbody>
+                  <tr>
+                    <td>Image</td>
+                    <td>{container.image}</td>
+                  </tr>
+                  <tr>
+                    <td>Ready</td>
+                    <td>{String(container.ready)}</td>
+                  </tr>
+                  <tr>
+                    <td>Restarts</td>
+                    <td>{container.restarts}</td>
+                  </tr>
                   {container.last_exit_time && (
-                    <>Last Termination At: {container.last_exit_time}</>
+                    <tr>
+                      <td>Last terminiation</td>
+                      <td>
+                        Reason: {container.last_exit_reason}
+                        <br />
+                        Finished at:{" "}
+                        {new Date(container.last_exit_time).toLocaleString()}
+                      </td>
+                    </tr>
                   )}
-                  <br />
-                  {container.last_exit_reason && (
-                    <>Last Termination Reason: {container.last_exit_reason}</>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </>
-          <EventsFeed namespace={ns} involvedObjectName={pn} />
+                </tbody>
+              </table>
+            </div>
+          ))}
+
+          <EventsFeed namespace={ns} involvedObjectName={name} />
+
           <PodLogsViewer
             namespace={ns}
-            podName={pn}
+            podName={name}
             containers={data.containers.map((c) => c.name)}
           />
         </>

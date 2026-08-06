@@ -5,21 +5,17 @@ import KeyValueList from "./KeyValueList";
 test("happy path", () => {
   render(
     <KeyValueList
-      title="Labels"
       entries={[
         ["some", "label"],
         ["hello", "world"],
       ]}
     ></KeyValueList>,
   );
-  expect(screen.getByText("Labels:")).toBeInTheDocument();
-  expect(screen.getByText("some: label")).toBeInTheDocument();
-  expect(screen.getByText("hello: world")).toBeInTheDocument();
+  expect(screen.getByText("some=label")).toBeInTheDocument();
+  expect(screen.getByText("hello=world")).toBeInTheDocument();
 });
 
 test("empty", () => {
-  const { container } = render(
-    <KeyValueList title="Labels" entries={[]}></KeyValueList>,
-  );
+  const { container } = render(<KeyValueList entries={[]}></KeyValueList>);
   expect(container).toBeEmptyDOMElement();
 });

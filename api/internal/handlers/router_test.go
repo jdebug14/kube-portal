@@ -240,7 +240,7 @@ func TestRouter_GetDeploymentDetails(t *testing.T) {
 	if assert.NotNil(t, result.Body) {
 		body, err := io.ReadAll(result.Body)
 		if assert.NoError(t, err) {
-			var deploymentDetails types.DeploymentDetail
+			var deploymentDetails types.DeploymentDetails
 			err = json.Unmarshal(body, &deploymentDetails)
 			if assert.NoError(t, err) {
 				assert.Equal(t, "deployment1", deploymentDetails.Name)
@@ -405,7 +405,7 @@ func TestRouter_ListEvents_WithFilter(t *testing.T) {
 
 	// assert
 	assert.Equal(t, http.StatusOK, w.Result().StatusCode)
-	assert.Equal(t, "involvedObject.name=pod1", capturedFieldSelector)
+	assert.Equal(t, "involvedObject.name=pod1,involvedObject.namespace=default", capturedFieldSelector)
 }
 
 func TestRouter_GetLogs(t *testing.T) {

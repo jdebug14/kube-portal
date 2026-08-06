@@ -39,14 +39,14 @@ func (c *Client) ListDeployments(ctx context.Context, namespace string) ([]types
 	return results, nil
 }
 
-func (c *Client) GetDeploymentDetails(ctx context.Context, namespace string, deploymentName string) (types.DeploymentDetail, error) {
+func (c *Client) GetDeploymentDetails(ctx context.Context, namespace string, deploymentName string) (types.DeploymentDetails, error) {
 	d, err := c.clientset.AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 	if err != nil {
-		return types.DeploymentDetail{}, fmt.Errorf("failed to get deployment %q: %w", deploymentName, err)
+		return types.DeploymentDetails{}, fmt.Errorf("failed to get deployment %q: %w", deploymentName, err)
 	}
 	replicasetList, err := c.clientset.AppsV1().ReplicaSets(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return types.DeploymentDetail{}, fmt.Errorf("failed to list replicasets for namespace %q: %w", namespace, err)
+		return types.DeploymentDetails{}, fmt.Errorf("failed to list replicasets for namespace %q: %w", namespace, err)
 	}
 
 	var desiredReplicas int32
@@ -54,7 +54,7 @@ func (c *Client) GetDeploymentDetails(ctx context.Context, namespace string, dep
 		desiredReplicas = *d.Spec.Replicas
 	}
 	deploymentConditions := mapConditions(d.Status.Conditions)
-	result := types.DeploymentDetail{
+	result := types.DeploymentDetails{
 		Name:              d.Name,
 		Namespace:         d.Namespace,
 		Strategy:          getDeploymentStrategy(d.Spec.Strategy),
@@ -82,9 +82,9 @@ func getDeploymentStrategy(strategy appsv1.DeploymentStrategy) string {
 }
 
 func mapConditions(deploymentConditions []appsv1.DeploymentCondition) []types.DeploymentCondition {
-	result := make([]types.DeploymentCondition, 0, len(deploymentConditions))
+	results := make([]types.DeploymentCondition, 0, len(deploymentConditions))
 	for _, c := range deploymentConditions {
-		result = append(result, types.DeploymentCondition{
+		results = append(results, types.DeploymentCondition{
 			Type:               string(c.Type),
 			Status:             string(c.Status),
 			Reason:             c.Reason,
@@ -93,7 +93,10 @@ func mapConditions(deploymentConditions []appsv1.DeploymentCondition) []types.De
 			LastTransitionTime: c.LastTransitionTime.Time,
 		})
 	}
-	return result
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].LastUpdateTime.After(results[j].LastUpdateTime)
+	})
+	return results
 }
 
 func mapRevisions(replicaSets *appsv1.ReplicaSetList, deploymentUID k8stypes.UID, logger *slog.Logger) []types.DeploymentRevision {
@@ -193,7 +196,7 @@ func getRolloutStatus(conditions []types.DeploymentCondition) string {
 		return "Failure"
 	}
 	if progressing.Reason == "NewReplicaSetAvailable" {
-		return "Success"
+		return "Running"
 	}
 	return "Pending"
 }

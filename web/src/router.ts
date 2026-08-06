@@ -6,6 +6,7 @@ import {
 import App from "./App";
 import NamespacesPage from "./pages/NamespacesPage";
 import WorkloadsPage from "./pages/WorkloadsPage";
+import DeploymentDetailsPage from "./pages/DeploymentDetailsPage";
 import PodDetailsPage from "./pages/PodDetailsPage";
 
 const rootRoute = createRootRoute({ component: App });
@@ -20,15 +21,21 @@ export const workloadsRoute = createRoute({
   path: "/namespaces/$ns",
   component: WorkloadsPage,
 });
+export const deploymentDetailsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/namespaces/$ns/deployments/$name",
+  component: DeploymentDetailsPage,
+});
 export const podDetailsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/namespaces/$ns/pods/$pn",
+  path: "/namespaces/$ns/pods/$name",
   component: PodDetailsPage,
 });
 
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   workloadsRoute,
+  deploymentDetailsRoute,
   podDetailsRoute,
 ]);
 

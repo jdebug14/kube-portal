@@ -207,7 +207,7 @@ func TestGetPodDetails_HappyPath(t *testing.T) {
 	assert.NotNil(t, result.Body)
 	body, err := io.ReadAll(result.Body)
 	assert.NoError(t, err)
-	var podDetails types.PodDetail
+	var podDetails types.PodDetails
 	err = json.Unmarshal(body, &podDetails)
 	assert.NoError(t, err)
 	assert.Equal(t, "pod1", podDetails.Name)
@@ -267,7 +267,7 @@ func TestGetPodDetails_NeverTerminated(t *testing.T) {
 	assert.NotNil(t, result.Body)
 	body, err := io.ReadAll(result.Body)
 	assert.NoError(t, err)
-	var podDetails types.PodDetail
+	var podDetails types.PodDetails
 	err = json.Unmarshal(body, &podDetails)
 	assert.NoError(t, err)
 	assert.Equal(t, "pod1", podDetails.Name)

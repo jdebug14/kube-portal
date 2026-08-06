@@ -27,12 +27,12 @@ func (c *Client) ListPods(ctx context.Context, namespace string) ([]types.Pod, e
 	return results, nil
 }
 
-func (c *Client) GetPodDetails(ctx context.Context, namespace string, podName string) (types.PodDetail, error) {
+func (c *Client) GetPodDetails(ctx context.Context, namespace string, podName string) (types.PodDetails, error) {
 	p, err := c.clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 	if err != nil {
-		return types.PodDetail{}, fmt.Errorf("failed to get pod details: %w", err)
+		return types.PodDetails{}, fmt.Errorf("failed to get pod details: %w", err)
 	}
-	result := types.PodDetail{
+	result := types.PodDetails{
 		Name:        p.Name,
 		Namespace:   p.Namespace,
 		Phase:       string(p.Status.Phase),
